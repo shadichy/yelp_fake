@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from ..models import user as user_model
 from ..schemas import user as user_schema
-from ..database import SessionLocal
+from ..database import get_db
 from ..hashing import Hasher
 from .. import jwt
 
@@ -12,13 +12,7 @@ router = APIRouter(
     tags=["users"],
 )
 
-# Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+
 
 @router.post("/", response_model=user_schema.User)
 def create_user(user: user_schema.UserCreate, db: Session = Depends(get_db)):
