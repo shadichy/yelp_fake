@@ -31,11 +31,12 @@
 
 - **Language**: **Python**
 - **Framework**: **FastAPI** (for its high performance, automatic data validation, and interactive API documentation).
-- **Database**: **PostgreSQL** (a robust relational database that handles complex queries and geospatial data well).
+- **Database**: **PostgreSQL** (a robust relational database that handles complex queries and geospatial data well). We will use a local **SQLite** database for development.
+- **ORM**: **SQLAlchemy** (using the modern, fully typed 2.0 syntax with `Mapped` and `mapped_column`).
+- **Type Safety**: **MyPy** configured for strict type checking across the entire backend.
 - **Data Validation**: **Pydantic** (integrated natively in FastAPI for request and response model validation).
 - **API Testing**: **Pytest** with `requests` or `httpx` to write comprehensive unit and integration tests for all API endpoints.
 - **Authentication**: JWT (JSON Web Tokens) for securing API endpoints.
-- **ORM**: **SQLAlchemy** or **asyncpg** for interacting with the PostgreSQL database.
 
 ## 4. Development Strategy
 
@@ -74,3 +75,8 @@
 7.  **Phase 7: Deployment**
     - Containerize the frontend and backend applications using Docker.
     - Plan for deployment on a cloud provider like AWS, Google Cloud, or Heroku.
+
+## 5. Development Workflow
+
+- **Version Control**: Git
+- **Commit Strategy**: Commits will be made after each logical step or feature implementation is complete to ensure a clean and traceable project history.
