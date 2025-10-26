@@ -1,10 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Register from './pages/Register';
 import Login from './pages/Login';
-
-function Profile() {
-  return <h1>Profile Page</h1>;
-}
+import Profile from './pages/Profile';
 
 function App() {
   return (

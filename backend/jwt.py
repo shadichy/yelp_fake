@@ -2,10 +2,13 @@ from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 from pydantic import BaseModel
 from fastapi import HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 
 SECRET_KEY = "a_very_secret_key"  # Should be loaded from config
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login")
 
 class TokenData(BaseModel):
     email: str | None = None
