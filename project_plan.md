@@ -72,9 +72,13 @@
     - **FE**: Conduct UI/UX testing and refine the user flow.
     - Perform end-to-end testing of the entire application.
 
-7.  **Phase 7: Deployment**
-    - Containerize the frontend and backend applications using Docker.
-    - Plan for deployment on a cloud provider like AWS, Google Cloud, or Heroku.
+## 7. Deployment
+
+- **Build Process**: The React frontend will be built into a set of static HTML, CSS, and JavaScript artifacts.
+- **Hosting**: The FastAPI backend will be responsible for serving both the API and the static frontend artifacts.
+- **Containerization**: The unified application (backend + frontend artifacts) will be containerized using Docker for consistent and portable deployments.
+- **Cloud Provider**: Plan for deployment on a cloud provider like AWS, Google Cloud, or Heroku.
+
 
 ## 5. Development Workflow
 
