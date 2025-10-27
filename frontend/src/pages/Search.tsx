@@ -1,15 +1,136 @@
-import React from 'react';
-import { Container, Typography } from '@mui/material';
+
+import React, { useState } from 'react';
+import { Container, Typography, TextField, Button, Box, Grid, Card, CardContent } from '@mui/material';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { Link } from 'react-router-dom';
+import api from '../../api';
+
+interface Therapist {
+  id: number;
+  full_name: string;
+  specialization: string;
+  office_address: string;
+  phone_number: string;
+  website: string;
+  latitude: number | null;
+  longitude: number | null;
+}
 
 const Search: React.FC = () => {
+  const [specialization, setSpecialization] = useState('');
+  const [lat, setLat] = useState<number | '' >(34.0522);
+  const [lon, setLon] = useState<number | '' >(-118.2437);
+  const [radius, setRadius] = useState<number | '' >(10);
+  const [results, setResults] = useState<Therapist[]>([]);
+
+  const handleSearch = async () => {
+    try {
+      const response = await api.get('/profile/therapists/search', {
+        params: {
+          specialization,
+          lat: lat === '' ? undefined : lat,
+          lon: lon === '' ? undefined : lon,
+          radius: radius === '' ? undefined : radius,
+        },
+      });
+      setResults(response.data);
+    } catch (error) {
+      console.error('Search failed:', error);
+    }
+  };
+
   return (
     <Container>
       <Typography variant="h4" component="h1" gutterBottom>
         Therapist Search
       </Typography>
-      <Typography>
-        Search functionality will be implemented here.
-      </Typography>
+      <Box sx={{ mb: 4 }}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Specialization"
+              value={specialization}
+              onChange={(e) => setSpecialization(e.target.value)}
+            />
+          </Grid>
+          <Grid item xs={12} sm={2}>
+            <TextField
+              fullWidth
+              label="Latitude"
+              type="number"
+              value={lat}
+              onChange={(e) => setLat(e.target.value === '' ? '' : parseFloat(e.target.value))}
+            />
+          </Grid>
+          <Grid item xs={12} sm={2}>
+            <TextField
+              fullWidth
+              label="Longitude"
+              type="number"
+              value={lon}
+              onChange={(e) => setLon(e.target.value === '' ? '' : parseFloat(e.target.value))}
+            />
+          </Grid>
+          <Grid item xs={12} sm={2}>
+            <TextField
+              fullWidth
+              label="Radius (km)"
+              type="number"
+              value={radius}
+              onChange={(e) => setRadius(e.target.value === '' ? '' : parseFloat(e.target.value))}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <Button variant="contained" onClick={handleSearch}>
+              Search
+            </Button>
+          </Grid>
+        </Grid>
+      </Box>
+
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+            <MapContainer center={[lat || 34.0522, lon || -118.2437]} zoom={10} style={{ height: '500px', width: '100%' }}>
+                <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                />
+                {results.map((therapist) => (
+                    therapist.latitude && therapist.longitude && (
+                        <Marker key={therapist.id} position={[therapist.latitude, therapist.longitude]}>
+                            <Popup>
+                                {therapist.full_name} <br /> {therapist.office_address}
+                            </Popup>
+                        </Marker>
+                    )
+                ))}
+            </MapContainer>
+        </Grid>
+        <Grid item xs={12} md={6}>
+            <Box sx={{ height: '500px', overflowY: 'auto' }}>
+                <Grid container spacing={2}>
+                    {results.map((therapist) => (
+                    <Grid item xs={12} key={therapist.id}>
+                        <Link to={`/therapist/${therapist.id}`} style={{ textDecoration: 'none' }}>
+                            <Card>
+                                <CardContent>
+                                    <Typography variant="h6">{therapist.full_name}</Typography>
+                                    <Typography>Specialization: {therapist.specialization}</Typography>
+                                    <Typography>Address: {therapist.office_address}</Typography>
+                                    <Typography>Phone: {therapist.phone_number}</Typography>
+                                    {therapist.website && (
+                                    <Typography>Website: <a href={therapist.website} target="_blank" rel="noopener noreferrer">{therapist.website}</a></Typography>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </Link>
+                    </Grid>
+                    ))}
+                </Grid>
+            </Box>
+        </Grid>
+      </Grid>
     </Container>
   );
 };

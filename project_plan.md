@@ -59,7 +59,7 @@
     - Implement the main application layout, routing, and navigation.
     - Build the registration and login pages and connect them to the backend.
 
-4.  **Phase 4: Core Feature Implementation (Search & Profiles)**
+4.  **Phase 4: Core Feature Implementation (Search & Profiles) (Current Phase)**
     - **BE**: Develop the therapist search API endpoint with filtering logic.
     - **FE**: Build the therapist search page with map view and filter components.
     - **FE**: Create the component for displaying detailed therapist profiles.

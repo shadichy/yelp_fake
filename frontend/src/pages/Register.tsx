@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Container, Typography, TextField, Button, Box, Select, MenuItem, FormControl, InputLabel, Alert } from '@mui/material';
+import api from '../../api';
 
 const Register: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -14,27 +15,19 @@ const Register: React.FC = () => {
     setSuccess(null);
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/users/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          user_type: userType,
-        }),
+      const response = await api.post('/users/', {
+        email,
+        password,
+        user_type: userType,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Something went wrong');
+      if (response.status !== 200) {
+        throw new Error(response.data.detail || 'Something went wrong');
       }
 
-      const data = await response.json();
-      setSuccess(`User created successfully with ID: ${data.id}`);
+      setSuccess(`User created successfully. Please check your email to verify your account.`);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message);
     }
   };
 

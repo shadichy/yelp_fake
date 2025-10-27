@@ -5,12 +5,22 @@ from ..database import get_db
 from ..models.user import User
 from ..models.profile import Patient as PatientModel, Therapist as TherapistModel
 from ..schemas.profile import PatientCreate, TherapistCreate, Patient, Therapist, PatientUpdate, TherapistUpdate, PatientDelete, TherapistDelete, ProfileResponse
+from typing import List
+from math import radians, sin, cos, sqrt, atan2
 
 router = APIRouter(
     prefix="/profile",
     tags=["profile"],
 )
 
+def haversine(lat1, lon1, lat2, lon2):
+    R = 6371  # Radius of Earth in kilometers
+    dLat = radians(lat2 - lat1)
+    dLon = radians(lon2 - lon1)
+    a = sin(dLat / 2) * sin(dLat / 2) + cos(radians(lat1)) * cos(radians(lat2)) * sin(dLon / 2) * sin(dLon / 2)
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    distance = R * c
+    return distance
 
 def get_current_user(token: str = Depends(jwt.oauth2_scheme), db: Session = Depends(get_db)) -> User:
     token_data = jwt.verify_token(token)
@@ -21,6 +31,26 @@ def get_current_user(token: str = Depends(jwt.oauth2_scheme), db: Session = Depe
             detail="User not found",
         )
     return user
+
+@router.get("/therapists/search", response_model=List[Therapist])
+def search_therapists(specialization: str = None, lat: float = None, lon: float = None, radius: float = None, db: Session = Depends(get_db)):
+    query = db.query(TherapistModel)
+
+    if specialization:
+        query = query.filter(TherapistModel.specialization.ilike(f"%{specialization}%"))
+
+    therapists = query.all()
+
+    if lat is not None and lon is not None and radius is not None:
+        filtered_therapists = []
+        for therapist in therapists:
+            if therapist.latitude is not None and therapist.longitude is not None:
+                distance = haversine(lat, lon, therapist.latitude, therapist.longitude)
+                if distance <= radius:
+                    filtered_therapists.append(therapist)
+        therapists = filtered_therapists
+
+    return therapists
 
 @router.post("/patient", response_model=Patient)
 def create_patient_profile(profile: PatientCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

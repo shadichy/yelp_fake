@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Container, Typography, TextField, Button, Box, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { setToken } from '../../features/auth/authSlice';
+import api from '../../api';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -17,24 +21,20 @@ const Login: React.FC = () => {
     formData.append('password', password);
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/users/login', {
-        method: 'POST',
+      const response = await api.post('/users/login', formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: formData,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Something went wrong');
+      if (response.status !== 200) {
+        throw new Error(response.data.detail || 'Something went wrong');
       }
 
-      const data = await response.json();
-      localStorage.setItem('token', data.access_token);
+      dispatch(setToken(response.data.access_token));
       navigate('/profile'); // Redirect to a protected route
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.detail || err.message);
     }
   };
 
