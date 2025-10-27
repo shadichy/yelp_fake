@@ -4,13 +4,12 @@ from .. import jwt
 from ..database import get_db
 from ..models.user import User
 from ..models.profile import Patient as PatientModel, Therapist as TherapistModel
-from ..schemas.profile import PatientCreate, TherapistCreate, Patient, Therapist, PatientUpdate, TherapistUpdate, PatientDelete, TherapistDelete
+from ..schemas.profile import PatientCreate, TherapistCreate, Patient, Therapist, PatientUpdate, TherapistUpdate, PatientDelete, TherapistDelete, ProfileResponse
 
 router = APIRouter(
     prefix="/profile",
     tags=["profile"],
 )
-
 
 
 def get_current_user(token: str = Depends(jwt.oauth2_scheme), db: Session = Depends(get_db)) -> User:
@@ -82,7 +81,7 @@ def create_therapist_profile(profile: TherapistCreate, db: Session = Depends(get
 
 @router.put("/therapist", response_model=Therapist)
 def update_therapist_profile(profile_update: TherapistUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    if current_user.user_type != "THERAPIST":
+    if current_user.user_.user_type != "THERAPIST":
         raise HTTPException(status_code=403, detail="Only therapists can update therapist profiles.")
     
     db_profile = current_user.therapist_profile
@@ -111,13 +110,9 @@ def delete_therapist_profile(db: Session = Depends(get_db), current_user: User =
     db.commit()
     return TherapistDelete()
 
-@router.get("/", response_model=Patient | Therapist)
+@router.get("/", response_model=ProfileResponse)
 def get_user_profile(current_user: User = Depends(get_current_user)):
     if current_user.user_type == "PATIENT":
-        if not current_user.patient_profile:
-            raise HTTPException(status_code=404, detail="Patient profile not found.")
-        return current_user.patient_profile
+        return {"user_type": "PATIENT", "profile": current_user.patient_profile}
     else:
-        if not current_user.therapist_profile:
-            raise HTTPException(status_code=404, detail="Therapist profile not found.")
-        return current_user.therapist_profile
+        return {"user_type": "THERAPIST", "profile": current_user.therapist_profile}

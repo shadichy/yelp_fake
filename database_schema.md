@@ -1,34 +1,44 @@
 # Database Schema
 
-## Users Table
-- `user_id` (Primary Key, UUID)
-- `email` (String, Unique)
-- `password_hash` (String)
-- `user_type` (Enum: "PATIENT", "THERAPIST")
-- `created_at` (Timestamp)
-- `updated_at` (Timestamp)
+This document outlines the database schema based on the SQLAlchemy models.
 
-## Patients Table
-- `patient_id` (Primary Key, Foreign Key to Users.user_id)
-- `full_name` (String)
+## Users Table (`users`)
+- `id` (Integer, Primary Key)
+- `email` (String, Unique, Not Null)
+- `hashed_password` (String, Not Null)
+- `verified` (Boolean, Not Null, Default: `False`)
+- `user_type` (Enum: "PATIENT", "THERAPIST", "ADMIN", Not Null)
+- `created_at` (DateTime, Default: `now()`)
+- `updated_at` (DateTime, On Update: `now()`)
+
+## Patients Table (`patients`)
+- `id` (Integer, Primary Key, Foreign Key to `users.id`)
+- `full_name` (String, Not Null)
 - `date_of_birth` (Date)
 - `address` (String)
 - `phone_number` (String)
 - `profile_picture_url` (String)
 
-## Therapists Table
-- `therapist_id` (Primary Key, Foreign Key to Users.user_id)
-- `full_name` (String)
-- `license_number` (String, Unique)
-- `specialization` (Array of Strings)
+## Therapists Table (`therapists`)
+- `id` (Integer, Primary Key, Foreign Key to `users.id`)
+- `full_name` (String, Not Null)
+- `license_number` (String, Unique, Not Null)
+- `specialization` (String)
 - `years_of_experience` (Integer)
 - `office_address` (String)
 - `latitude` (Float)
 - `longitude` (Float)
 - `phone_number` (String)
 - `website` (String)
-- `availability` (JSONB)
+- `availability` (String)
 - `profile_picture_url` (String)
+
+## Verification Tokens Table (`verification_tokens`)
+- `id` (Integer, Primary Key)
+- `token` (String, Unique, Not Null)
+- `user_id` (Integer, Foreign Key to `users.id`, Not Null)
+- `expires_at` (DateTime, Not Null)
+- `created_at` (DateTime, Default: `now()`)
 
 ## Appointments Table
 - `appointment_id` (Primary Key, UUID)

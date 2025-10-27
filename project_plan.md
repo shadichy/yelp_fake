@@ -1,4 +1,3 @@
-
 # Project Plan: Yelp for Therapists
 
 ## 1. Project Overview
@@ -8,79 +7,84 @@
 
 ## 2. Core Features
 
-- **Advanced Therapist Search**: Patients can search for therapists using location-based queries (powered by OpenStreetMap) and filter results by specialization, availability, price range, and patient reviews.
-- **Comprehensive Therapist Profiles**: Therapists can create detailed profiles showcasing their qualifications, experience, specializations, office photos, and a personal bio to connect with potential patients.
-- **Seamless Appointment Management**: An integrated calendar system allows patients to view a therapist's real-time availability and book appointments directly. Both parties can manage their schedules through a personal dashboard.
-- **Verified Patient Reviews**: Patients can leave ratings and detailed reviews after a completed appointment, building a transparent and community-driven reputation system.
-- **Secure Messaging Portal**: A confidential, in-app messaging system for patients and therapists to communicate securely before and after appointments.
-- **User Authentication**: Separate, secure registration and login flows for Patients and Therapists.
+- **Advanced Therapist Search**: Patients can search for therapists using location-based queries and filter results by specialization, availability, and patient reviews.
+- **Comprehensive Therapist Profiles**: Therapists can create detailed profiles showcasing their qualifications, experience, and specializations.
+- **Seamless Appointment Management**: An integrated calendar system allows patients to book appointments and for both parties to manage their schedules.
+- **Verified Patient Reviews**: Patients can leave reviews after a completed appointment, building a transparent reputation system.
+- **Secure Messaging Portal**: A confidential messaging system for patients and therapists to communicate.
+- **User Authentication**: Separate, secure registration and login flows for Patients and Therapists, with email verification.
+- **Admin Dashboard**: A dedicated interface for administrators to manage all system data, including users and profiles.
 
 ## 3. Technology Stack
 
 ### Frontend
 
-- **Language**: **TypeScript** (for type safety and scalability)
-- **Framework**: **React** (using Vite for a fast development experience)
-- **Styling**: **SCSS** (for advanced and organized styling)
-- **UI Library**: **MUI (Material-UI) for React** which implements Google's Material 3 design principles.
-- **Mapping**: **OpenStreetMap** integrated with a library like **Leaflet** or **React-Leaflet** for displaying therapist locations.
-- **State Management**: **Redux Toolkit** for predictable and centralized state management.
-- **Routing**: **React Router** for client-side navigation.
+- **Language**: **TypeScript**
+- **Framework**: **React** (using Vite)
+- **Styling**: **SCSS**
+- **UI Library**: **MUI (Material-UI) for React**
+- **Mapping**: **OpenStreetMap** with **React-Leaflet**.
+- **State Management**: **Redux Toolkit**.
+- **Routing**: **React Router**.
 
 ### Backend
 
 - **Language**: **Python**
-- **Framework**: **FastAPI** (for its high performance, automatic data validation, and interactive API documentation).
-- **Database**: **PostgreSQL** (a robust relational database that handles complex queries and geospatial data well). We will use a local **SQLite** database for development.
-- **ORM**: **SQLAlchemy** (using the modern, fully typed 2.0 syntax with `Mapped` and `mapped_column`).
-- **Type Safety**: **MyPy** configured for strict type checking across the entire backend.
-- **Data Validation**: **Pydantic** (integrated natively in FastAPI for request and response model validation).
-- **API Testing**: **Pytest** with `requests` or `httpx` to write comprehensive unit and integration tests for all API endpoints.
-- **Authentication**: JWT (JSON Web Tokens) for securing API endpoints.
+- **Framework**: **FastAPI**
+- **Database**: **PostgreSQL** (production) / **SQLite** (development).
+- **ORM**: **SQLAlchemy 2.0** with `Mapped` and `mapped_column`.
+- **Admin Panel**: **FastAPI Admin** for a simple and integrated admin interface.
+- **Type Safety**: **MyPy** (strict mode).
+- **Data Validation**: **Pydantic**.
+- **API Testing**: **Pytest**.
+- **Authentication**: JWT (JSON Web Tokens).
+- **Mail Server**: Local mail server for development (e.g., using `aiosmtpd`).
 
 ## 4. Development Strategy
 
 1.  **Phase 1: Backend Foundation**
     - Initialize the FastAPI project structure.
-    - Define the database schema using SQLAlchemy models.
-    - Implement user registration and JWT-based authentication for both Patients and Therapists.
+    - Define the database schema using SQLAlchemy models (`User`, `Profile`, `VerificationToken`).
+    - Implement user registration with email verification and JWT-based authentication.
     - Create CRUD API endpoints for therapist profile management.
 
-2.  **Phase 2: Frontend Scaffolding**
+2.  **Phase 2: Admin Panel Implementation**
+    - Integrate `fastapi-admin` into the backend.
+    - Create admin resources for all database models.
+    - Implement authentication for the admin panel, restricted to `ADMIN` users.
+
+3.  **Phase 3: Frontend Scaffolding**
     - Set up the React + TypeScript project using Vite.
     - Configure SCSS and install MUI (Material-UI).
     - Implement the main application layout, routing, and navigation.
-    - Build the registration and login pages and connect them to the backend authentication endpoints.
+    - Build the registration and login pages and connect them to the backend.
 
-3.  **Phase 3: Core Feature Implementation (Search & Profiles)**
+4.  **Phase 4: Core Feature Implementation (Search & Profiles)**
     - **BE**: Develop the therapist search API endpoint with filtering logic.
-    - **FE**: Build the therapist search page with map view (OpenStreetMap) and filter components.
+    - **FE**: Build the therapist search page with map view and filter components.
     - **FE**: Create the component for displaying detailed therapist profiles.
 
-4.  **Phase 4: Appointment Booking**
+5.  **Phase 5: Appointment Booking**
     - **BE**: Create API endpoints for managing availability and booking appointments.
-    - **FE**: Implement the therapist availability calendar on the profile page.
-    - **FE**: Build the appointment booking flow and the user dashboard for managing appointments.
+    - **FE**: Implement the therapist availability calendar and booking flow.
 
-5.  **Phase 5: Reviews & Messaging**
+6.  **Phase 6: Reviews & Messaging**
     - **BE**: Develop API endpoints for submitting and retrieving reviews.
-    - **BE**: Implement a basic WebSocket or long-polling-based messaging API.
-    - **FE**: Add the review section to therapist profiles and create the secure messaging interface.
+    - **BE**: Implement a basic messaging API.
+    - **FE**: Add the review section to therapist profiles and create the messaging interface.
 
-6.  **Phase 6: Testing and Refinement**
-    - **BE**: Write extensive `pytest` tests to ensure all API endpoints are working correctly and handle edge cases.
-    - **FE**: Conduct UI/UX testing and refine the user flow.
-    - Perform end-to-end testing of the entire application.
+7.  **Phase 7: Testing and Refinement**
+    - Write extensive `pytest` tests for the backend.
+    - Conduct UI/UX testing and refine the user flow.
+    - Perform end-to-end testing.
 
-## 7. Deployment
+## 5. Deployment
 
-- **Build Process**: The React frontend will be built into a set of static HTML, CSS, and JavaScript artifacts.
-- **Hosting**: The FastAPI backend will be responsible for serving both the API and the static frontend artifacts.
-- **Containerization**: The unified application (backend + frontend artifacts) will be containerized using Docker for consistent and portable deployments.
-- **Cloud Provider**: Plan for deployment on a cloud provider like AWS, Google Cloud, or Heroku.
+- **Build Process**: The React frontend will be built into static artifacts.
+- **Hosting**: The FastAPI backend will serve both the API and the static frontend artifacts.
+- **Containerization**: The application will be containerized using Docker and orchestrated with `docker-compose` which will include the backend, a database, and a mail server.
 
-
-## 5. Development Workflow
+## 6. Development Workflow
 
 - **Version Control**: Git
-- **Commit Strategy**: Commits will be made after each logical step or feature implementation is complete to ensure a clean and traceable project history.
+- **Commit Strategy**: Commits will be made after each logical step or feature implementation is complete.

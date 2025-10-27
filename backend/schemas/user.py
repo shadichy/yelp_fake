@@ -1,9 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from enum import Enum
-
-class UserType(str, Enum):
-    PATIENT = "PATIENT"
-    THERAPIST = "THERAPIST"
+from .enums import UserType
 
 class UserBase(BaseModel):
     email: EmailStr

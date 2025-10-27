@@ -3,12 +3,13 @@
 ## Actors
 - **Patient**: An individual seeking therapy services.
 - **Therapist**: A licensed professional providing therapy services.
+- **Admin**: A system administrator responsible for managing the platform.
 - **System**: The platform itself.
 
 ## Patient Use Cases
 
 - **UC-01: Register and Create Profile**
-  - **Description**: A new user can register as a patient and create a personal profile with their information.
+  - **Description**: A new user can register as a patient, verify their email, and create a personal profile with their information.
   - **Actors**: Patient, System
 
 - **UC-02: Search for Therapists**
@@ -38,7 +39,7 @@
 ## Therapist Use Cases
 
 - **UC-08: Register and Create Professional Profile**
-  - **Description**: A new user can register as a therapist and create a professional profile with their credentials, specialization, and other relevant information.
+  - **Description**: A new user can register as a therapist, verify their account via an email link, and create a professional profile with their credentials, specialization, and other relevant information.
   - **Actors**: Therapist, System
 
 - **UC-09: Manage Availability**
@@ -52,3 +53,9 @@
 - **UC-11: View Patient Profile**
   - **Description**: A therapist can view the profile of a patient who has booked an appointment with them.
   - **Actors**: Therapist, System
+
+## Admin Use Cases
+
+- **UC-12: Manage Users and Data**
+  - **Description**: An admin can log into a dedicated admin dashboard to perform CRUD operations on all system data, including users (patients, therapists), profiles, and appointments.
+  - **Actors**: Admin, System

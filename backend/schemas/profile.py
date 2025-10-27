@@ -65,3 +65,7 @@ class TherapistUpdate(BaseModel):
 
 class TherapistDelete(BaseModel):
     message: str = "Therapist profile deleted successfully"
+
+class ProfileResponse(BaseModel):
+    user_type: str
+    profile: Optional[Patient | Therapist] = None
