@@ -46,7 +46,7 @@ const Search: FC = () => {
       </Typography>
       <Box sx={{ mb: 4 }}>
         <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
               label="Specialization"
@@ -54,7 +54,7 @@ const Search: FC = () => {
               onChange={(e: ChangeEvent<HTMLInputElement>) => setSpecialization(e.target.value)}
             />
           </Grid>
-          <Grid item xs={12} sm={2}>
+          <Grid size={{ xs: 12, sm: 2 }}>
             <TextField
               fullWidth
               label="Latitude"
@@ -65,7 +65,7 @@ const Search: FC = () => {
               }
             />
           </Grid>
-          <Grid item xs={12} sm={2}>
+          <Grid size={{ xs: 12, sm: 2 }}>
             <TextField
               fullWidth
               label="Longitude"
@@ -76,7 +76,7 @@ const Search: FC = () => {
               }
             />
           </Grid>
-          <Grid item xs={12} sm={2}>
+          <Grid size={{ xs: 12, sm: 2 }}>
             <TextField
               fullWidth
               label="Radius (km)"
@@ -87,7 +87,7 @@ const Search: FC = () => {
               }
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <Button variant="contained" onClick={handleSearch}>
               Search
             </Button>
@@ -96,7 +96,7 @@ const Search: FC = () => {
       </Box>
 
       <Grid container spacing={2}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <MapContainer center={[lat || 34.0522, lon || -118.2437]} zoom={10} style={{ height: '500px', width: '100%' }}>
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -113,22 +113,22 @@ const Search: FC = () => {
             ))}
           </MapContainer>
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Box sx={{ height: '500px', overflowY: 'auto' }}>
             <Grid container spacing={2}>
               {results.map((therapist) => (
-                                  <Grid item xs={12} key={therapist.id}>
-                                    <Link to={`/therapist/${therapist.id}`} style={{ textDecoration: 'none' }}>                    <Card>
-                      <CardContent>
-                        <Typography variant="h6">{therapist.full_name}</Typography>
-                        <Typography>Specialization: {therapist.specialization}</Typography>
-                        <Typography>Address: {therapist.office_address}</Typography>
-                        <Typography>Phone: {therapist.phone_number}</Typography>
-                        {therapist.website && (
-                          <Typography>Website: <a href={therapist.website} target="_blank" rel="noopener noreferrer">{therapist.website}</a></Typography>
-                        )}
-                      </CardContent>
-                    </Card>
+                <Grid size={{ xs: 12 }} key={therapist.id}>
+                  <Link to={`/therapist/${therapist.id}`} style={{ textDecoration: 'none' }}>                    <Card>
+                    <CardContent>
+                      <Typography variant="h6">{therapist.full_name}</Typography>
+                      <Typography>Specialization: {therapist.specialization}</Typography>
+                      <Typography>Address: {therapist.office_address}</Typography>
+                      <Typography>Phone: {therapist.phone_number}</Typography>
+                      {therapist.website && (
+                        <Typography>Website: <a href={therapist.website} target="_blank" rel="noopener noreferrer">{therapist.website}</a></Typography>
+                      )}
+                    </CardContent>
+                  </Card>
                   </Link>
                 </Grid>
               ))}

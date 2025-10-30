@@ -1,24 +1,17 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ChangeEvent, type KeyboardEvent } from 'react';
+import type { FC } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../app/store';
 import api from '../api';
 import { Box, TextField, Button, List, ListItem, ListItemText, Typography } from '@mui/material';
+import type { Message } from '../types/message';
 
-interface Message {
-  id: number;
-  sender_id: number;
-  receiver_id: number;
-  content: string;
-  sent_at: string;
-}
-
-const Messaging = () => {
-  const [conversations, setConversations] = useState<any[]>([]);
+const Messaging: FC = () => {
   const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const auth = useSelector((state: RootState) => state.auth);
+  const [newMessage, setNewMessage] = useState<string>('');
+  const { user } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     // This is a simplified approach. A real app would have an endpoint
@@ -26,20 +19,37 @@ const Messaging = () => {
     // For now, we'll just let the user enter a user ID to talk to.
   }, []);
 
-  const handleStartConversation = (userId: number) => {
-    setSelectedConversation(userId);
-    api.get(`/messages/${userId}`).then((response) => {
+  const handleStartConversation = async (userId: number) => {
+    try {
+      setSelectedConversation(userId);
+      const response = await api.get<Message[]>(`/messages/${userId}`);
       setMessages(response.data);
-    });
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+    }
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (selectedConversation) {
-      api.post('/messages/', { receiver_id: selectedConversation, content: newMessage })
-        .then((response) => {
-          setMessages([...messages, response.data]);
-          setNewMessage('');
-        });
+      try {
+        const response = await api.post<Message>('/messages/', { receiver_id: selectedConversation, content: newMessage });
+        setMessages([...messages, response.data]);
+        setNewMessage('');
+      } catch (error) {
+        console.error('Error sending message:', error);
+      }
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleStartConversation(parseInt((e.target as HTMLInputElement).value));
+    }
+  };
+
+  const handleMessageKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSendMessage();
     }
   };
 
@@ -53,11 +63,7 @@ const Messaging = () => {
           variant="outlined"
           size="small"
           sx={{ m: 2, width: 'calc(100% - 32px)' }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              handleStartConversation(parseInt((e.target as HTMLInputElement).value));
-            }
-          }}
+          onKeyDown={handleKeyDown}
         />
       </Box>
       <Box sx={{ width: '70%', display: 'flex', flexDirection: 'column' }}>
@@ -65,7 +71,7 @@ const Messaging = () => {
           {selectedConversation ? (
             <List>
               {messages.map((msg) => (
-                <ListItem key={msg.id} sx={{ textAlign: msg.sender_id === auth.user?.id ? 'right' : 'left' }}>
+                <ListItem key={msg.id} sx={{ textAlign: msg.sender_id === user?.id ? 'right' : 'left' }}>
                   <ListItemText
                     primary={msg.content}
                     secondary={new Date(msg.sent_at).toLocaleString()}
@@ -84,12 +90,8 @@ const Messaging = () => {
               variant="outlined"
               fullWidth
               value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleSendMessage();
-                }
-              }}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setNewMessage(e.target.value)}
+              onKeyDown={handleMessageKeyDown}
             />
             <Button variant="contained" onClick={handleSendMessage} sx={{ mt: 1 }}>Send</Button>
           </Box>

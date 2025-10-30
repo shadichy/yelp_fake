@@ -9,4 +9,6 @@ export interface Therapist {
   years_of_experience: number;
   availability: string;
   profile_picture_url: string;
+  latitude: number | null;
+  longitude: number | null;
 }

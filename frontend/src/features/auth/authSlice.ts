@@ -8,12 +8,16 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   userType: UserType | null;
+  user: DecodedToken | null;
 }
 
+const token = localStorage.getItem('token');
+
 const initialState: AuthState = {
-  token: localStorage.getItem('token'),
-  isAuthenticated: !!localStorage.getItem('token'),
-  userType: localStorage.getItem('token') ? (jwtDecode(localStorage.getItem('token')!) as DecodedToken).user_type : null,
+  token,
+  isAuthenticated: !!token,
+  userType: token ? (jwtDecode(token) as DecodedToken).user_type : null,
+  user: token ? (jwtDecode(token) as DecodedToken) : null,
 };
 
 const authSlice = createSlice({
@@ -24,13 +28,16 @@ const authSlice = createSlice({
       state.token = action.payload;
       state.isAuthenticated = true;
       localStorage.setItem('token', action.payload);
-      state.userType = (jwtDecode(action.payload) as DecodedToken).user_type;
+      const decodedToken = jwtDecode(action.payload) as DecodedToken;
+      state.userType = decodedToken.user_type;
+      state.user = decodedToken;
     },
     clearToken: (state: AuthState) => {
       state.token = null;
       state.isAuthenticated = false;
       localStorage.removeItem('token');
       state.userType = null;
+      state.user = null;
     },
   },
 });

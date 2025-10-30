@@ -35,7 +35,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token = jwt.create_access_token(data={"sub": user.email}, user_type=user.user_type.value)
+    access_token = jwt.create_access_token(data={"sub": user.email}, user_type=user.user_type.value, user_id=user.id)
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.get("/me", response_model=user_schema.User)
