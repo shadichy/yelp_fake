@@ -12,7 +12,7 @@ import {
   CardContent,
 } from '@mui/material';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import type { Therapist } from '../types/therapist';
 
@@ -22,6 +22,7 @@ const Search: FC = () => {
   const [lon, setLon] = useState<number | ''>(-118.2437);
   const [radius, setRadius] = useState<number | ''>(10);
   const [results, setResults] = useState<Therapist[]>([]);
+  const navigate = useNavigate();
 
   const handleSearch = async () => {
     try {
@@ -39,6 +40,11 @@ const Search: FC = () => {
     }
   };
 
+  const handleTherapistClick = (therapistId: number) => {
+    sessionStorage.setItem('selectedTherapistId', String(therapistId));
+    navigate(`/therapist/${therapistId}`);
+  };
+
   return (
     <Container>
       <Typography variant="h4" component="h1" gutterBottom>
@@ -46,7 +52,7 @@ const Search: FC = () => {
       </Typography>
       <Box sx={{ mb: 4 }}>
         <Grid container spacing={2}>
-          <Grid size={{ xs: 12, sm: 6 }}>
+          <Grid item xs={12} sm={6} component="div">
             <TextField
               fullWidth
               label="Specialization"
@@ -54,7 +60,7 @@ const Search: FC = () => {
               onChange={(e: ChangeEvent<HTMLInputElement>) => setSpecialization(e.target.value)}
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 2 }}>
+          <Grid item xs={12} sm={2} component="div">
             <TextField
               fullWidth
               label="Latitude"
@@ -65,7 +71,7 @@ const Search: FC = () => {
               }
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 2 }}>
+          <Grid item xs={12} sm={2} component="div">
             <TextField
               fullWidth
               label="Longitude"
@@ -76,7 +82,7 @@ const Search: FC = () => {
               }
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 2 }}>
+          <Grid item xs={12} sm={2} component="div">
             <TextField
               fullWidth
               label="Radius (km)"
@@ -87,7 +93,7 @@ const Search: FC = () => {
               }
             />
           </Grid>
-          <Grid size={{ xs: 12 }}>
+          <Grid item xs={12} component="div">
             <Button variant="contained" onClick={handleSearch}>
               Search
             </Button>
@@ -96,7 +102,7 @@ const Search: FC = () => {
       </Box>
 
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid item xs={12} md={6} component="div">
           <MapContainer center={[lat || 34.0522, lon || -118.2437]} zoom={10} style={{ height: '500px', width: '100%' }}>
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -113,12 +119,12 @@ const Search: FC = () => {
             ))}
           </MapContainer>
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid item xs={12} md={6} component="div">
           <Box sx={{ height: '500px', overflowY: 'auto' }}>
             <Grid container spacing={2}>
               {results.map((therapist) => (
-                <Grid size={{ xs: 12 }} key={therapist.id}>
-                  <Link to={`/therapist/${therapist.id}`} style={{ textDecoration: 'none' }}>                    <Card>
+                <Grid item xs={12} key={therapist.id} component="div">
+                  <Card onClick={() => handleTherapistClick(therapist.id)} style={{ cursor: 'pointer' }}>
                     <CardContent>
                       <Typography variant="h6">{therapist.full_name}</Typography>
                       <Typography>Specialization: {therapist.specialization}</Typography>
@@ -129,7 +135,6 @@ const Search: FC = () => {
                       )}
                     </CardContent>
                   </Card>
-                  </Link>
                 </Grid>
               ))}
             </Grid>
