@@ -32,8 +32,8 @@ app.include_router(appointment_router.router)
 app.include_router(review_router.router)
 app.include_router(message_router.router)
 
-app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="assets")
+# app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="assets")
 
-@app.get("/{full_path:path}")
-async def serve_react_app(full_path: str) -> FileResponse:
-    return FileResponse("frontend/dist/index.html")
+# @app.get("/{full_path:path}")
+# async def serve_react_app(full_path: str) -> FileResponse:
+#     return FileResponse("frontend/dist/index.html")

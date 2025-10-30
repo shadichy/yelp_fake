@@ -1,6 +1,10 @@
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        - PORT=8000
     ports:
       - "8000:8000"
     volumes:
@@ -21,6 +25,9 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - API_ENDPOINT=http://backend:8000
+        - PORT=80
     ports:
       - "80:80"
     depends_on:
