@@ -16,8 +16,8 @@ const token = localStorage.getItem('token');
 const initialState: AuthState = {
   token,
   isAuthenticated: !!token,
-  userType: token ? (jwtDecode(token) as DecodedToken).user_type : null,
-  user: token ? (jwtDecode(token) as DecodedToken) : null,
+  userType: token ? jwtDecode<DecodedToken>(token).user_type : null,
+  user: token ? jwtDecode<DecodedToken>(token) : null,
 };
 
 const authSlice = createSlice({
@@ -28,7 +28,7 @@ const authSlice = createSlice({
       state.token = action.payload;
       state.isAuthenticated = true;
       localStorage.setItem('token', action.payload);
-      const decodedToken = jwtDecode(action.payload) as DecodedToken;
+      const decodedToken = jwtDecode<DecodedToken>(action.payload);
       state.userType = decodedToken.user_type;
       state.user = decodedToken;
     },

@@ -168,7 +168,7 @@ const TherapistProfile: FC = () => {
               <Rating
                 name="simple-controlled"
                 value={rating}
-                onChange={(event: ChangeEvent<{}>, newValue: number | null) => {
+                onChange={(_event: ChangeEvent<{}>, newValue: number | null) => {
                   setRating(newValue);
                 }}
               />

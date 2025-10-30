@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import React from 'react';
-import { Container, Typography, Box, Alert, CircularProgress, Button } from '@mui/material';
+import { Container, Typography, Box, Alert, CircularProgress } from '@mui/material';
 import CreatePatientProfile from '../components/CreatePatientProfile';
 import CreateTherapistProfile from '../components/CreateTherapistProfile';
 import api from '../api';
