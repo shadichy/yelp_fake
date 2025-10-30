@@ -14,3 +14,4 @@ Thumbs.db
 # Database files
 *.db
 test.db
+__pycache__/
