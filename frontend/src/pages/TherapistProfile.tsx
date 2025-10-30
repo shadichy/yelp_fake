@@ -51,7 +51,8 @@ const TherapistProfile: FC = () => {
         setAvailabilities(availabilityResponse.data);
         const reviewsResponse = await api.get<Review[]>(`/reviews/${id}`);
         setReviews(reviewsResponse.data);
-      } catch (err: unknown) {
+      } catch (err) {
+        console.log(err);
         setError('Failed to fetch therapist data.');
       }
       setLoading(false);
@@ -68,7 +69,8 @@ const TherapistProfile: FC = () => {
         end_time: availability.end_time,
       });
       alert('Appointment booked successfully!');
-    } catch (error) {
+    } catch (err) {
+      console.log(err);
       alert('Failed to book appointment.');
     }
   };
@@ -83,7 +85,8 @@ const TherapistProfile: FC = () => {
       setReviews([...reviews, response.data]);
       setRating(0);
       setComment('');
-    } catch (error) {
+    } catch (err) {
+      console.log(err);
       alert('Failed to submit review.');
     }
   };
@@ -168,7 +171,7 @@ const TherapistProfile: FC = () => {
               <Rating
                 name="simple-controlled"
                 value={rating}
-                onChange={(_event: ChangeEvent<{}>, newValue: number | null) => {
+                onChange={(_event: ChangeEvent<unknown>, newValue: number | null) => {
                   setRating(newValue);
                 }}
               />
