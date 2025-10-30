@@ -5,6 +5,7 @@ from ..database import get_db
 from ..models.user import User
 from ..models.profile import Patient as PatientModel, Therapist as TherapistModel
 from ..schemas.profile import PatientCreate, TherapistCreate, Patient, Therapist, PatientUpdate, TherapistUpdate, PatientDelete, TherapistDelete, ProfileResponse
+from ..schemas.enums import UserType
 from typing import List
 from math import radians, sin, cos, sqrt, atan2
 
@@ -13,7 +14,7 @@ router = APIRouter(
     tags=["profile"],
 )
 
-def haversine(lat1, lon1, lat2, lon2):
+def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     R = 6371  # Radius of Earth in kilometers
     dLat = radians(lat2 - lat1)
     dLon = radians(lon2 - lon1)
@@ -22,18 +23,8 @@ def haversine(lat1, lon1, lat2, lon2):
     distance = R * c
     return distance
 
-def get_current_user(token: str = Depends(jwt.oauth2_scheme), db: Session = Depends(get_db)) -> User:
-    token_data = jwt.verify_token(token)
-    user = db.query(User).filter(User.email == token_data.email).first()
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
-    return user
-
 @router.get("/therapists/search", response_model=List[Therapist])
-def search_therapists(specialization: str = None, lat: float = None, lon: float = None, radius: float = None, db: Session = Depends(get_db)):
+def search_therapists(specialization: str | None = None, lat: float | None = None, lon: float | None = None, radius: float | None = None, db: Session = Depends(get_db)) -> List[TherapistModel]:
     query = db.query(TherapistModel)
 
     if specialization:
@@ -53,21 +44,21 @@ def search_therapists(specialization: str = None, lat: float = None, lon: float 
     return therapists
 
 @router.post("/patient", response_model=Patient)
-def create_patient_profile(profile: PatientCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    if current_user.user_type != "PATIENT":
+def create_patient_profile(profile: PatientCreate, db: Session = Depends(get_db), current_user: User = Depends(jwt.get_current_user)) -> PatientModel:
+    if current_user.user_type != UserType.PATIENT:
         raise HTTPException(status_code=403, detail="Only patients can create patient profiles.")
     if current_user.patient_profile:
         raise HTTPException(status_code=400, detail="Patient profile already exists.")
     
-    db_profile = PatientModel(**profile.model_dump(), id=current_user.id)
+    db_profile = PatientModel(**profile.model_dump(), user_id=current_user.id)
     db.add(db_profile)
     db.commit()
     db.refresh(db_profile)
     return db_profile
 
 @router.put("/patient", response_model=Patient)
-def update_patient_profile(profile_update: PatientUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    if current_user.user_type != "PATIENT":
+def update_patient_profile(profile_update: PatientUpdate, db: Session = Depends(get_db), current_user: User = Depends(jwt.get_current_user)) -> PatientModel:
+    if current_user.user_type != UserType.PATIENT:
         raise HTTPException(status_code=403, detail="Only patients can update patient profiles.")
     
     db_profile = current_user.patient_profile
@@ -84,8 +75,8 @@ def update_patient_profile(profile_update: PatientUpdate, db: Session = Depends(
     return db_profile
 
 @router.delete("/patient", response_model=PatientDelete)
-def delete_patient_profile(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    if current_user.user_type != "PATIENT":
+def delete_patient_profile(db: Session = Depends(get_db), current_user: User = Depends(jwt.get_current_user)) -> PatientDelete:
+    if current_user.user_type != UserType.PATIENT:
         raise HTTPException(status_code=403, detail="Only patients can delete patient profiles.")
     
     db_profile = current_user.patient_profile
@@ -97,26 +88,26 @@ def delete_patient_profile(db: Session = Depends(get_db), current_user: User = D
     return PatientDelete()
 
 @router.post("/therapist", response_model=Therapist)
-def create_therapist_profile(profile: TherapistCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    if current_user.user_type != "THERAPIST":
+def create_therapist_profile(profile: TherapistCreate, db: Session = Depends(get_db), current_user: User = Depends(jwt.get_current_user)) -> TherapistModel:
+    if current_user.user_type != UserType.THERAPIST:
         raise HTTPException(status_code=403, detail="Only therapists can create therapist profiles.")
     if current_user.therapist_profile:
         raise HTTPException(status_code=400, detail="Therapist profile already exists.")
 
-    db_profile = TherapistModel(**profile.model_dump(), id=current_user.id)
+    db_profile = TherapistModel(**profile.model_dump(), user_id=current_user.id)
     db.add(db_profile)
     db.commit()
     db.refresh(db_profile)
     return db_profile
 
 @router.put("/therapist", response_model=Therapist)
-def update_therapist_profile(profile_update: TherapistUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    if current_user.user_.user_type != "THERAPIST":
+def update_therapist_profile(profile_update: TherapistUpdate, db: Session = Depends(get_db), current_user: User = Depends(jwt.get_current_user)) -> TherapistModel:
+    if current_user.user_type != UserType.THERAPIST:
         raise HTTPException(status_code=403, detail="Only therapists can update therapist profiles.")
     
     db_profile = current_user.therapist_profile
     if not db_profile:
-        raise HTTPException(status_code=404, detail="Therapist profile not found.")
+        raise HTTPException(status_code=404, detail="Therapist profile not. found.")
 
     update_data = profile_update.model_dump(exclude_unset=True)
     for key, value in update_data.items():
@@ -128,8 +119,8 @@ def update_therapist_profile(profile_update: TherapistUpdate, db: Session = Depe
     return db_profile
 
 @router.delete("/therapist", response_model=TherapistDelete)
-def delete_therapist_profile(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    if current_user.user_type != "THERAPIST":
+def delete_therapist_profile(db: Session = Depends(get_db), current_user: User = Depends(jwt.get_current_user)) -> TherapistDelete:
+    if current_user.user_type != UserType.THERAPIST:
         raise HTTPException(status_code=403, detail="Only therapists can delete therapist profiles.")
     
     db_profile = current_user.therapist_profile
@@ -141,8 +132,8 @@ def delete_therapist_profile(db: Session = Depends(get_db), current_user: User =
     return TherapistDelete()
 
 @router.get("/", response_model=ProfileResponse)
-def get_user_profile(current_user: User = Depends(get_current_user)):
-    if current_user.user_type == "PATIENT":
-        return {"user_type": "PATIENT", "profile": current_user.patient_profile}
+def get_user_profile(current_user: User = Depends(jwt.get_current_user)) -> ProfileResponse:
+    if current_user.user_type == UserType.PATIENT:
+        return ProfileResponse(user_type=UserType.PATIENT, profile=current_user.patient_profile)
     else:
-        return {"user_type": "THERAPIST", "profile": current_user.therapist_profile}
+        return ProfileResponse(user_type=UserType.THERAPIST, profile=current_user.therapist_profile)

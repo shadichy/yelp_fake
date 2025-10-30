@@ -14,9 +14,7 @@ class PatientCreate(PatientBase):
 
 class Patient(PatientBase):
     id: int
-
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 class PatientUpdate(BaseModel):
     full_name: Optional[str] = None
@@ -46,9 +44,7 @@ class TherapistCreate(TherapistBase):
 
 class Therapist(TherapistBase):
     id: int
-
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 class TherapistUpdate(BaseModel):
     full_name: Optional[str] = None

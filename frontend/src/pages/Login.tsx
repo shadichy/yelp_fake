@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { FC } from 'react';
 import { Container, Typography, TextField, Button, Box, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { setToken } from '../../features/auth/authSlice';
-import api from '../../api';
+import { setToken } from '../features/auth/authSlice';
+import api from '../api';
+import type { AxiosError } from 'axios';
 
-const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+const Login: FC = () => {
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
 
@@ -33,8 +35,11 @@ const Login: React.FC = () => {
 
       dispatch(setToken(response.data.access_token));
       navigate('/profile'); // Redirect to a protected route
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        const axiosError = err as AxiosError<{ detail: string }>;
+        setError(axiosError.response?.data?.detail || axiosError.message);
+      }
     }
   };
 
@@ -63,7 +68,7 @@ const Login: React.FC = () => {
             autoComplete="email"
             autoFocus
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
           />
           <TextField
             margin="normal"
@@ -75,7 +80,7 @@ const Login: React.FC = () => {
             id="password"
             autoComplete="current-password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
           />
           <Button
             type="submit"

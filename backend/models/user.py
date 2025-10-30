@@ -3,11 +3,15 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 from ..database import Base
 import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
     from .profile import Patient, Therapist
     from .verification_token import VerificationToken
+    from .appointment import Appointment
+    from .availability import Availability
+    from .review import Review
+    from .message import Message
 
 class User(Base):
     __tablename__ = 'users'
@@ -20,6 +24,3 @@ class User(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
 
-    patient_profile: Mapped["Patient"] = relationship(back_populates="user", uselist=False)
-    therapist_profile: Mapped["Therapist"] = relationship(back_populates="user", uselist=False)
-    verification_tokens: Mapped[list["VerificationToken"]] = relationship(back_populates="user")

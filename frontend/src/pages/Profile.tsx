@@ -1,14 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import React from 'react';
 import { Container, Typography, Box, Alert, CircularProgress, Button } from '@mui/material';
 import CreatePatientProfile from '../components/CreatePatientProfile';
 import CreateTherapistProfile from '../components/CreateTherapistProfile';
+import api from '../api';
+import { UserType } from '../schemas/enums';
+import type { Profile as TypeProfile, ProfileResponse } from '../types/profile';
+import type { User } from '../types/user';
+import type { AxiosError } from 'axios';
 
 const Profile: React.FC = () => {
-  const [profile, setProfile] = useState<any>(null);
-  const [userType, setUserType] = useState<string | null>(null);
+  const [profile, setProfile] = useState<TypeProfile | null>(null);
+  const [userType, setUserType] = useState<UserType | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
 
   const fetchProfile = async () => {
     setLoading(true);
@@ -18,36 +24,32 @@ const Profile: React.FC = () => {
         throw new Error('No token found. Please log in.');
       }
 
-      const response = await fetch('http://127.0.0.1:8000/profile/', {
+      const response = await api.get<ProfileResponse>('/profile/', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
       if (response.status === 404) {
-        const userData = await fetch('http://127.0.0.1:8000/users/me', { // This endpoint does not exist yet
+        const { data: user } = await api.get<User>('/users/me', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        const user = await userData.json();
         setUserType(user.user_type);
         setShowCreateForm(true);
         setProfile(null);
         return;
       }
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to fetch profile');
-      }
-
-      const data = await response.json();
-      setProfile(data.profile);
-      setUserType(data.user_type);
+      setProfile(response.data.profile);
+      setUserType(response.data.user_type);
       setShowCreateForm(false);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        const axiosError = err as AxiosError<{ detail: string }>;
+        setError(axiosError.response?.data?.detail || axiosError.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -78,21 +80,21 @@ const Profile: React.FC = () => {
         {showCreateForm && (
           <Box>
             <Typography variant="h6">Create your profile</Typography>
-            {userType === 'PATIENT' && <CreatePatientProfile onProfileCreated={handleProfileCreated} />}
-            {userType === 'THERAPIST' && <CreateTherapistProfile onProfileCreated={handleProfileCreated} />}
+            {userType === UserType.PATIENT && <CreatePatientProfile onProfileCreated={handleProfileCreated} />}
+            {userType === UserType.THERAPIST && <CreateTherapistProfile onProfileCreated={handleProfileCreated} />}
           </Box>
         )}
         {profile && (
           <Box>
             <Typography variant="h6">Name: {profile.full_name}</Typography>
-            {userType === 'PATIENT' && (
+            {userType === UserType.PATIENT && 'date_of_birth' in profile && (
               <>
                 <Typography>Date of Birth: {profile.date_of_birth}</Typography>
                 <Typography>Address: {profile.address}</Typography>
                 <Typography>Phone Number: {profile.phone_number}</Typography>
               </>
             )}
-            {userType === 'THERAPIST' && (
+            {userType === UserType.THERAPIST && 'license_number' in profile && (
               <>
                 <Typography>License Number: {profile.license_number}</Typography>
                 {/* Add other therapist fields here */}

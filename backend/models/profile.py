@@ -14,7 +14,7 @@ class Patient(Base):
     phone_number: Mapped[str] = mapped_column(String, nullable=True)
     profile_picture_url: Mapped[str] = mapped_column(String, nullable=True)
 
-    user: Mapped["User"] = relationship(back_populates="patient_profile")
+
 
 class Therapist(Base):
     __tablename__ = 'therapists'
@@ -32,4 +32,4 @@ class Therapist(Base):
     availability: Mapped[str] = mapped_column(String, nullable=True) # Should be JSON, will handle in schema
     profile_picture_url: Mapped[str] = mapped_column(String, nullable=True)
 
-    user: Mapped["User"] = relationship(back_populates="therapist_profile")
+

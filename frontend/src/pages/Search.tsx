@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Container, Typography, TextField, Button, Box, Grid, Card, CardContent } from '@mui/material';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Link } from 'react-router-dom';
-import api from '../../api';
+import api from '../api';
 
 interface Therapist {
   id: number;
@@ -18,9 +18,9 @@ interface Therapist {
 
 const Search: React.FC = () => {
   const [specialization, setSpecialization] = useState('');
-  const [lat, setLat] = useState<number | '' >(34.0522);
-  const [lon, setLon] = useState<number | '' >(-118.2437);
-  const [radius, setRadius] = useState<number | '' >(10);
+  const [lat, setLat] = useState<number | ''>(34.0522);
+  const [lon, setLon] = useState<number | ''>(-118.2437);
+  const [radius, setRadius] = useState<number | ''>(10);
   const [results, setResults] = useState<Therapist[]>([]);
 
   const handleSearch = async () => {
@@ -91,44 +91,44 @@ const Search: React.FC = () => {
 
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
-            <MapContainer center={[lat || 34.0522, lon || -118.2437]} zoom={10} style={{ height: '500px', width: '100%' }}>
-                <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                />
-                {results.map((therapist) => (
-                    therapist.latitude && therapist.longitude && (
-                        <Marker key={therapist.id} position={[therapist.latitude, therapist.longitude]}>
-                            <Popup>
-                                {therapist.full_name} <br /> {therapist.office_address}
-                            </Popup>
-                        </Marker>
-                    )
-                ))}
-            </MapContainer>
+          <MapContainer center={[lat || 34.0522, lon || -118.2437]} zoom={10} style={{ height: '500px', width: '100%' }}>
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            />
+            {results.map((therapist) => (
+              therapist.latitude && therapist.longitude && (
+                <Marker key={therapist.id} position={[therapist.latitude, therapist.longitude]}>
+                  <Popup>
+                    {therapist.full_name} <br /> {therapist.office_address}
+                  </Popup>
+                </Marker>
+              )
+            ))}
+          </MapContainer>
         </Grid>
         <Grid item xs={12} md={6}>
-            <Box sx={{ height: '500px', overflowY: 'auto' }}>
-                <Grid container spacing={2}>
-                    {results.map((therapist) => (
-                    <Grid item xs={12} key={therapist.id}>
-                        <Link to={`/therapist/${therapist.id}`} style={{ textDecoration: 'none' }}>
-                            <Card>
-                                <CardContent>
-                                    <Typography variant="h6">{therapist.full_name}</Typography>
-                                    <Typography>Specialization: {therapist.specialization}</Typography>
-                                    <Typography>Address: {therapist.office_address}</Typography>
-                                    <Typography>Phone: {therapist.phone_number}</Typography>
-                                    {therapist.website && (
-                                    <Typography>Website: <a href={therapist.website} target="_blank" rel="noopener noreferrer">{therapist.website}</a></Typography>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        </Link>
-                    </Grid>
-                    ))}
+          <Box sx={{ height: '500px', overflowY: 'auto' }}>
+            <Grid container spacing={2}>
+              {results.map((therapist) => (
+                <Grid item xs={12} key={therapist.id}>
+                  <Link to={`/therapist/${therapist.id}`} style={{ textDecoration: 'none' }}>
+                    <Card>
+                      <CardContent>
+                        <Typography variant="h6">{therapist.full_name}</Typography>
+                        <Typography>Specialization: {therapist.specialization}</Typography>
+                        <Typography>Address: {therapist.office_address}</Typography>
+                        <Typography>Phone: {therapist.phone_number}</Typography>
+                        {therapist.website && (
+                          <Typography>Website: <a href={therapist.website} target="_blank" rel="noopener noreferrer">{therapist.website}</a></Typography>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Link>
                 </Grid>
-            </Box>
+              ))}
+            </Grid>
+          </Box>
         </Grid>
       </Grid>
     </Container>

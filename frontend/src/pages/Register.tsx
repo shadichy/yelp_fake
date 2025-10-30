@@ -1,15 +1,30 @@
-import React, { useState } from 'react';
-import { Container, Typography, TextField, Button, Box, Select, MenuItem, FormControl, InputLabel, Alert } from '@mui/material';
-import api from '../../api';
+import { useState } from 'react';
+import type { FC } from 'react';
+import {
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Box,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Alert,
+} from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material';
+import api from '../api';
+import { UserType } from '../schemas/enums';
+import type { AxiosError } from 'axios';
 
-const Register: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [userType, setUserType] = useState('PATIENT');
+const Register: FC = () => {
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [userType, setUserType] = useState<UserType>(UserType.PATIENT);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
     setSuccess(null);
@@ -25,9 +40,12 @@ const Register: React.FC = () => {
         throw new Error(response.data.detail || 'Something went wrong');
       }
 
-      setSuccess(`User created successfully. Please check your email to verify your account.`);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message);
+      setSuccess('User created successfully. Please check your email to verify your account.');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        const axiosError = err as AxiosError<{ detail: string }>;
+        setError(axiosError.response?.data?.detail || axiosError.message);
+      }
     }
   };
 
@@ -57,7 +75,7 @@ const Register: React.FC = () => {
             autoComplete="email"
             autoFocus
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
           />
           <TextField
             margin="normal"
@@ -69,7 +87,7 @@ const Register: React.FC = () => {
             id="password"
             autoComplete="current-password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
           />
           <FormControl fullWidth margin="normal">
             <InputLabel id="user-type-label">User Type</InputLabel>
@@ -78,10 +96,10 @@ const Register: React.FC = () => {
               id="user-type"
               value={userType}
               label="User Type"
-              onChange={(e) => setUserType(e.target.value)}
+              onChange={(e: SelectChangeEvent<UserType>) => setUserType(e.target.value as UserType)}
             >
-              <MenuItem value={"PATIENT"}>Patient</MenuItem>
-              <MenuItem value={"THERAPIST"}>Therapist</MenuItem>
+              <MenuItem value={UserType.PATIENT}>Patient</MenuItem>
+              <MenuItem value={UserType.THERAPIST}>Therapist</MenuItem>
             </Select>
           </FormControl>
           <Button

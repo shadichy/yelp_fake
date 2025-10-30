@@ -59,7 +59,7 @@
     - Implement the main application layout, routing, and navigation.
     - Build the registration and login pages and connect them to the backend.
 
-4.  **Phase 4: Core Feature Implementation (Search & Profiles) (Current Phase)**
+4.  **Phase 4: Core Feature Implementation (Search & Profiles)**
     - **BE**: Develop the therapist search API endpoint with filtering logic.
     - **FE**: Build the therapist search page with map view and filter components.
     - **FE**: Create the component for displaying detailed therapist profiles.
@@ -73,10 +73,17 @@
     - **BE**: Implement a basic messaging API.
     - **FE**: Add the review section to therapist profiles and create the messaging interface.
 
-7.  **Phase 7: Testing and Refinement**
+7.  **Phase 7: Testing and Refinement (Completed)**
     - Write extensive `pytest` tests for the backend.
     - Conduct UI/UX testing and refine the user flow.
     - Perform end-to-end testing.
+
+8.  **Phase 8: Deployment (Current Phase)**
+    - Create a `compose.yaml` file for the backend, database, and mail server.
+    - Build the frontend for production.
+    - Configure the backend to serve the frontend.
+    - Write a `Dockerfile` for the backend.
+    - Write a `Dockerfile` for the frontend.
 
 ## 5. Deployment
 

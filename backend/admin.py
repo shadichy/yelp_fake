@@ -1,84 +1,29 @@
-from fastapi_admin.app import app as admin_app
-from fastapi_admin.resources import Model
-from fastapi_admin.authentication import Authentication
-from starlette.requests import Request
-from starlette.responses import RedirectResponse
-from .database import SessionLocal
+from sqladmin import ModelView
 from .models.user import User
 from .models.profile import Patient, Therapist
 from .models.verification_token import VerificationToken
-from .hashing import Hasher
-from . import jwt
 
-class AdminAuth(Authentication):
-    async def login(self, request: Request, credentials: dict) -> bool:
-        db = SessionLocal()
-        user = db.query(User).filter(User.email == credentials["username"]).first()
-        db.close()
-
-        if user and user.user_type == "ADMIN" and Hasher.verify_password(credentials["password"], user.hashed_password):
-            access_token = jwt.create_access_token(data={"sub": user.email})
-            request.session["token"] = access_token
-            return True
-        return False
-
-    async def logout(self, request: Request):
-        request.session.clear()
-
-    async def is_authenticated(self, request: Request) -> bool:
-        return "token" in request.session
-
-@admin_app.register
-class UserAdmin(Model):
-    resource = User
-    label = "User"
+class UserAdmin(ModelView, model=User):
+    column_list = [User.id, User.email, User.verified, User.user_type, User.created_at]
+    column_searchable_list = [User.email]
+    column_sortable_list = [User.id, User.email, User.verified, User.user_type, User.created_at]
+    column_details_list = [User.id, User.email, User.verified, User.user_type, User.created_at]
     icon = "fas fa-user"
-    fields = [
-        "id",
-        "email",
-        "verified",
-        "user_type",
-        "created_at",
-    ]
 
-@admin_app.register
-class PatientAdmin(Model):
-    resource = Patient
-    label = "Patient"
+class PatientAdmin(ModelView, model=Patient):
+    column_list = [Patient.id, Patient.full_name, Patient.date_of_birth, Patient.address, Patient.phone_number]
+    column_searchable_list = [Patient.full_name]
+    column_sortable_list = [Patient.id, Patient.full_name, Patient.date_of_birth]
+    column_details_list = [Patient.id, Patient.full_name, Patient.date_of_birth, Patient.address, Patient.phone_number]
     icon = "fas fa-user-injured"
-    fields = [
-        "id",
-        "full_name",
-        "date_of_birth",
-        "address",
-        "phone_number",
-    ]
 
-@admin_app.register
-class TherapistAdmin(Model):
-    resource = Therapist
-    label = "Therapist"
+class TherapistAdmin(ModelView, model=Therapist):
+    column_list = [Therapist.id, Therapist.full_name, Therapist.license_number, Therapist.specialization, Therapist.years_of_experience, Therapist.office_address, Therapist.phone_number, Therapist.website]
+    column_searchable_list = [Therapist.full_name, Therapist.specialization]
+    column_sortable_list = [Therapist.id, Therapist.full_name, Therapist.specialization, Therapist.years_of_experience]
+    column_details_list = [Therapist.id, Therapist.full_name, Therapist.license_number, Therapist.specialization, Therapist.years_of_experience, Therapist.office_address, Therapist.phone_number, Therapist.website]
     icon = "fas fa-user-md"
-    fields = [
-        "id",
-        "full_name",
-        "license_number",
-        "specialization",
-        "years_of_experience",
-        "office_address",
-        "phone_number",
-        "website",
-    ]
 
-@admin_app.register
-class VerificationTokenAdmin(Model):
-    resource = VerificationToken
-    label = "Verification Token"
+class VerificationTokenAdmin(ModelView, model=VerificationToken):
+    column_list = [VerificationToken.id, VerificationToken.token, VerificationToken.user_id, VerificationToken.expires_at, VerificationToken.created_at]
     icon = "fas fa-key"
-    fields = [
-        "id",
-        "token",
-        "user_id",
-        "expires_at",
-        "created_at",
-    ]

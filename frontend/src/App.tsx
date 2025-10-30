@@ -2,13 +2,15 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Button, Box, Container } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from './app/store';
+import type { RootState } from './app/store';
 import { clearToken } from './features/auth/authSlice';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
 import Search from './pages/Search';
 import TherapistProfile from './pages/TherapistProfile';
+import Availability from './pages/Availability';
+import Appointments from './pages/Appointments';
 
 const Home = () => (
   <Container>
@@ -22,7 +24,7 @@ const Home = () => (
 );
 
 function App() {
-  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
 
   const handleLogout = () => {
@@ -40,6 +42,10 @@ function App() {
             <>
               <Button color="inherit" component={Link} to="/profile">Profile</Button>
               <Button color="inherit" component={Link} to="/search">Search</Button>
+              <Button color="inherit" component={Link} to="/appointments">Appointments</Button>
+              {user?.user_type === 'THERAPIST' && (
+                <Button color="inherit" component={Link} to="/availability">Availability</Button>
+              )}
               <Button color="inherit" onClick={handleLogout}>Logout</Button>
             </>
           ) : (
@@ -58,6 +64,8 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/search" element={<Search />} />
           <Route path="/therapist/:id" element={<TherapistProfile />} />
+          <Route path="/availability" element={<Availability />} />
+          <Route path="/appointments" element={<Appointments />} />
         </Routes>
       </Box>
     </Router>
