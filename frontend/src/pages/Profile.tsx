@@ -30,7 +30,7 @@ const Profile: React.FC = () => {
         },
       });
 
-      if (response.status === 404) {
+      if (!response.data.profile) {
         const { data: user } = await api.get<User>('/users/me', {
           headers: {
             Authorization: `Bearer ${token}`,

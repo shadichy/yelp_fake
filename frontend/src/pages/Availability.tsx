@@ -71,7 +71,7 @@ const Availability: FC = () => {
       <div>
         <h3>Current Availabilities</h3>
         <ul>
-          {availabilities.map((avail) => (
+          {availabilities.map((avail: AvailabilityType) => (
             <li key={avail.id}>
               {new Date(avail.start_time).toLocaleString()} - {new Date(avail.end_time).toLocaleString()}
               <button onClick={() => handleDeleteAvailability(avail.id)}>Delete</button>

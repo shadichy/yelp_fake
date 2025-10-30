@@ -70,7 +70,7 @@ const Messaging: FC = () => {
         <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2 }}>
           {selectedConversation ? (
             <List>
-              {messages.map((msg) => (
+              {messages.map((msg: Message) => (
                 <ListItem key={msg.id} sx={{ textAlign: msg.sender_id === user?.id ? 'right' : 'left' }}>
                   <ListItemText
                     primary={msg.content}

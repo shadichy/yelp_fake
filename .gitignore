@@ -15,3 +15,6 @@ Thumbs.db
 *.db
 test.db
 __pycache__/
+
+# Lock files
+*.lock

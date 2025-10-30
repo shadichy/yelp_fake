@@ -1,8 +1,8 @@
-# Project Plan: Yelp for Therapists
+# Project Plan: Yelp
 
 ## 1. Project Overview
 
-- **Project Name**: Yelp for Therapists
+- **Project Name**: Yelp
 - **Mission**: To create a trusted and easy-to-use platform that connects individuals seeking mental health support with qualified local therapists. The platform will facilitate discovery, booking, and communication in a secure and confidential manner.
 
 ## 2. Core Features
