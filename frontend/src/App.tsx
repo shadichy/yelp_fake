@@ -1,18 +1,8 @@
 
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Button, Box, Container } from '@mui/material';
-import { createTheme } from '@mui/material/styles';
-import { ThemeProvider } from '@mui/material/styles';
-import { useSelector, useDispatch } from 'react-redux';
-import type { RootState } from './app/store';
-import { clearToken } from './features/auth/authSlice';
-import Register from './pages/Register';
-import Login from './pages/Login';
-import Profile from './pages/Profile';
-import Search from './pages/Search';
-import TherapistProfile from './pages/TherapistProfile';
-import Availability from './pages/Availability';
-import Appointments from './pages/Appointments';
+import Messaging from './pages/Messaging';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const theme = createTheme({
   palette: {
@@ -52,6 +42,7 @@ function App() {
                 <Button color="inherit" component={Link} to="/profile">Profile</Button>
                 <Button color="inherit" component={Link} to="/search">Search</Button>
                 <Button color="inherit" component={Link} to="/appointments">Appointments</Button>
+                <Button color="inherit" component={Link} to="/messaging">Messages</Button>
                 {user?.user_type === 'THERAPIST' && (
                   <Button color="inherit" component={Link} to="/availability">Availability</Button>
                 )}
@@ -70,11 +61,12 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/therapist/:id" element={<TherapistProfile />} />
-            <Route path="/availability" element={<Availability />} />
-            <Route path="/appointments" element={<Appointments />} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
+            <Route path="/therapist/:id" element={<ProtectedRoute><TherapistProfile /></ProtectedRoute>} />
+            <Route path="/availability" element={<ProtectedRoute><Availability /></ProtectedRoute>} />
+            <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
+            <Route path="/messaging" element={<ProtectedRoute><Messaging /></ProtectedRoute>} />
           </Routes>
         </Box>
       </Router>
