@@ -4,29 +4,46 @@ import type { FC } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../app/store';
 import api from '../api';
-import { Box, TextField, Button, List, ListItem, ListItemText, Typography } from '@mui/material';
+import { Box, TextField, Button, List, ListItem, ListItemText, Typography, Divider } from '@mui/material';
 import type { Message } from '../types/message';
+import type { UserProfile } from '../types/profile';
 
 const Messaging: FC = () => {
   const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>('');
+  const [connectedUsers, setConnectedUsers] = useState<UserProfile[]>([]);
   const { user } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
-    // This is a simplified approach. A real app would have an endpoint
-    // to get all conversations for the current user.
-    // For now, we'll just let the user enter a user ID to talk to.
+    const fetchConnectedUsers = async () => {
+      try {
+        const response = await api.get<UserProfile[]>('/messages/connected_users');
+        setConnectedUsers(response.data);
+      } catch (error) {
+        console.error('Error fetching connected users:', error);
+      }
+    };
+
+    fetchConnectedUsers();
   }, []);
 
-  const handleStartConversation = async (userId: number) => {
-    try {
-      setSelectedConversation(userId);
-      const response = await api.get<Message[]>(`/messages/${userId}`);
-      setMessages(response.data);
-    } catch (error) {
-      console.error('Error starting conversation:', error);
+  useEffect(() => {
+    if (selectedConversation) {
+      const fetchMessages = async () => {
+        try {
+          const response = await api.get<Message[]>(`/messages/${selectedConversation}`);
+          setMessages(response.data);
+        } catch (error) {
+          console.error('Error fetching messages:', error);
+        }
+      };
+      fetchMessages();
     }
+  }, [selectedConversation]);
+
+  const handleSelectConversation = (userId: number) => {
+    setSelectedConversation(userId);
   };
 
   const handleSendMessage = async () => {
@@ -41,12 +58,6 @@ const Messaging: FC = () => {
     }
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleStartConversation(parseInt((e.target as HTMLInputElement).value));
-    }
-  };
-
   const handleMessageKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSendMessage();
@@ -57,14 +68,19 @@ const Messaging: FC = () => {
     <Box sx={{ display: 'flex', height: 'calc(100vh - 120px)' }}>
       <Box sx={{ width: '30%', borderRight: '1px solid #ccc' }}>
         <Typography variant="h6" sx={{ p: 2 }}>Conversations</Typography>
-        {/* In a real app, this would be a list of conversations */}
-        <TextField
-          label="User ID to message"
-          variant="outlined"
-          size="small"
-          sx={{ m: 2, width: 'calc(100% - 32px)' }}
-          onKeyDown={handleKeyDown}
-        />
+        <Divider />
+        <List>
+          {connectedUsers.map((connectedUser) => (
+            <ListItem
+              button
+              key={connectedUser.id}
+              onClick={() => handleSelectConversation(connectedUser.id)}
+              selected={selectedConversation === connectedUser.id}
+            >
+              <ListItemText primary={connectedUser.full_name} />
+            </ListItem>
+          ))}
+        </List>
       </Box>
       <Box sx={{ width: '70%', display: 'flex', flexDirection: 'column' }}>
         <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2 }}>

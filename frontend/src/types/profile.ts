@@ -2,8 +2,14 @@
 import { UserType } from '../schemas/enums';
 
 export interface BaseProfile {
+  id: number;
   full_name: string;
   user_id: number;
+}
+
+export interface UserProfile {
+  id: number;
+  full_name: string;
 }
 
 export interface PatientProfile extends BaseProfile {
