@@ -1,23 +1,23 @@
 
-import React, { useState } from 'react';
-import { Container, Typography, TextField, Button, Box, Grid, Card, CardContent } from '@mui/material';
+import { useState, type ChangeEvent } from 'react';
+import type { FC } from 'react';
+import {
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Box,
+  Grid,
+  Card,
+  CardContent,
+} from '@mui/material';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Link } from 'react-router-dom';
 import api from '../api';
+import type { Therapist } from '../types/therapist';
 
-interface Therapist {
-  id: number;
-  full_name: string;
-  specialization: string;
-  office_address: string;
-  phone_number: string;
-  website: string;
-  latitude: number | null;
-  longitude: number | null;
-}
-
-const Search: React.FC = () => {
-  const [specialization, setSpecialization] = useState('');
+const Search: FC = () => {
+  const [specialization, setSpecialization] = useState<string>('');
   const [lat, setLat] = useState<number | ''>(34.0522);
   const [lon, setLon] = useState<number | ''>(-118.2437);
   const [radius, setRadius] = useState<number | ''>(10);
@@ -25,7 +25,7 @@ const Search: React.FC = () => {
 
   const handleSearch = async () => {
     try {
-      const response = await api.get('/profile/therapists/search', {
+      const response = await api.get<Therapist[]>('/profile/therapists/search', {
         params: {
           specialization,
           lat: lat === '' ? undefined : lat,
@@ -51,7 +51,7 @@ const Search: React.FC = () => {
               fullWidth
               label="Specialization"
               value={specialization}
-              onChange={(e) => setSpecialization(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setSpecialization(e.target.value)}
             />
           </Grid>
           <Grid item xs={12} sm={2}>
@@ -60,7 +60,9 @@ const Search: React.FC = () => {
               label="Latitude"
               type="number"
               value={lat}
-              onChange={(e) => setLat(e.target.value === '' ? '' : parseFloat(e.target.value))}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setLat(e.target.value === '' ? '' : parseFloat(e.target.value))
+              }
             />
           </Grid>
           <Grid item xs={12} sm={2}>
@@ -69,7 +71,9 @@ const Search: React.FC = () => {
               label="Longitude"
               type="number"
               value={lon}
-              onChange={(e) => setLon(e.target.value === '' ? '' : parseFloat(e.target.value))}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setLon(e.target.value === '' ? '' : parseFloat(e.target.value))
+              }
             />
           </Grid>
           <Grid item xs={12} sm={2}>
@@ -78,7 +82,9 @@ const Search: React.FC = () => {
               label="Radius (km)"
               type="number"
               value={radius}
-              onChange={(e) => setRadius(e.target.value === '' ? '' : parseFloat(e.target.value))}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setRadius(e.target.value === '' ? '' : parseFloat(e.target.value))
+              }
             />
           </Grid>
           <Grid item xs={12}>
@@ -111,9 +117,8 @@ const Search: React.FC = () => {
           <Box sx={{ height: '500px', overflowY: 'auto' }}>
             <Grid container spacing={2}>
               {results.map((therapist) => (
-                <Grid item xs={12} key={therapist.id}>
-                  <Link to={`/therapist/${therapist.id}`} style={{ textDecoration: 'none' }}>
-                    <Card>
+                                  <Grid item xs={12} key={therapist.id}>
+                                    <Link to={`/therapist/${therapist.id}`} style={{ textDecoration: 'none' }}>                    <Card>
                       <CardContent>
                         <Typography variant="h6">{therapist.full_name}</Typography>
                         <Typography>Specialization: {therapist.specialization}</Typography>
