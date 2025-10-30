@@ -19,7 +19,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import React, { useState, useMemo } from 'react';
 
 const ColorModeContext = React.createContext({
-  toggleColorMode: () => {},
+  toggleColorMode: () => { },
 });
 
 const Home = () => (
@@ -41,7 +41,17 @@ function App() {
   const colorMode = useMemo(
     () => ({
       toggleColorMode: () => {
-        setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
+        setMode((prevMode) => {
+          const root = document.getElementById('root')!;
+          if (prevMode === 'light') {
+            root.style.backgroundColor = '#121212';
+            root.style.color = 'rgba(255, 255, 255, 0.87)';
+          } else {
+            root.style.backgroundColor = '#ffffff';
+            root.style.color = 'rgba(0, 0, 0, 0.87)';
+          }
+          return (prevMode === 'light' ? 'dark' : 'light');
+        });
       },
     }),
     [],

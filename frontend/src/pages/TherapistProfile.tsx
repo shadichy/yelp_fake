@@ -25,7 +25,7 @@ import { UserType } from '../schemas/enums';
 import type { DecodedToken } from '../types/jwt';
 
 const TherapistProfile: FC = () => {
-  const { id } = useParams<{ id: string }>();
+  // const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [therapist, setTherapist] = useState<Therapist | null>(null);
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
@@ -36,6 +36,8 @@ const TherapistProfile: FC = () => {
   const [error, setError] = useState<string | null>(null);
   const { token } = useSelector((state: RootState) => state.auth);
   const [user, setUser] = useState<DecodedToken | null>(null);
+
+  const id = sessionStorage.getItem('selectedTherapistId') || '';
 
   useEffect(() => {
     if (token) {
