@@ -26,6 +26,11 @@ const Messaging: FC = () => {
     };
 
     fetchConnectedUsers();
+
+    const storedMessagingTargetId = sessionStorage.getItem('messagingTargetId');
+    if (storedMessagingTargetId) {
+      setSelectedConversation(parseInt(storedMessagingTargetId));
+    }
   }, []);
 
   useEffect(() => {
@@ -44,6 +49,7 @@ const Messaging: FC = () => {
 
   const handleSelectConversation = (userId: number) => {
     setSelectedConversation(userId);
+    sessionStorage.setItem('messagingTargetId', String(userId));
   };
 
   const handleSendMessage = async () => {
