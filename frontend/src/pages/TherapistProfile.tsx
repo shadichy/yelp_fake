@@ -13,7 +13,7 @@ import {
   Rating,
   Box,
 } from '@mui/material';
-import { useParams, Link as RouterLink } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { jwtDecode } from 'jwt-decode';
 import type { RootState } from '../app/store';
@@ -26,6 +26,7 @@ import type { DecodedToken } from '../types/jwt';
 
 const TherapistProfile: FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [therapist, setTherapist] = useState<Therapist | null>(null);
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -91,6 +92,13 @@ const TherapistProfile: FC = () => {
     }
   };
 
+  const handleMessageTherapist = () => {
+    if (therapist?.id) {
+      sessionStorage.setItem('messagingTargetId', String(therapist.id));
+      navigate('/messaging');
+    }
+  };
+
   if (loading) {
     return <CircularProgress />;
   }
@@ -122,10 +130,9 @@ const TherapistProfile: FC = () => {
 
       {user?.user_type === UserType.PATIENT && (
         <Button
-          component={RouterLink}
-          to={`/messaging?user_id=${therapist.id}`}
           variant="contained"
           sx={{ mt: 2, mr: 1 }}
+          onClick={handleMessageTherapist}
         >
           Message Therapist
         </Button>
