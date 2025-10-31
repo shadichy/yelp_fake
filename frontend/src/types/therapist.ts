@@ -11,4 +11,5 @@ export interface Therapist {
   profile_picture_url: string;
   latitude: number | null;
   longitude: number | null;
+  average_rating: number | null;
 }

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
 from sqlalchemy.orm import Session
 from .. import jwt
 from ..database import get_db
@@ -8,6 +8,7 @@ from ..schemas.profile import PatientCreate, TherapistCreate, Patient, Therapist
 from ..schemas.enums import UserType
 from typing import List
 from math import radians, sin, cos, sqrt, atan2
+import shutil
 
 router = APIRouter(
     prefix="/profile",
@@ -23,8 +24,26 @@ def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     distance = R * c
     return distance
 
+@router.post("/therapist/picture")
+def upload_therapist_picture(file: UploadFile = File(...), db: Session = Depends(get_db), current_user: User = Depends(jwt.get_current_user)):
+    if current_user.user_type != UserType.THERAPIST:
+        raise HTTPException(status_code=403, detail="Only therapists can upload pictures.")
+    
+    db_profile = current_user.therapist_profile
+    if not db_profile:
+        raise HTTPException(status_code=404, detail="Therapist profile not found.")
+
+    file_path = f"static/images/{current_user.id}_{file.filename}"
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    db_profile.profile_picture_url = f"/static/images/{current_user.id}_{file.filename}"
+    db.commit()
+
+    return {"message": "Profile picture updated successfully"}
+
 @router.get("/therapists/search", response_model=List[Therapist])
-def search_therapists(specialization: str | None = None, lat: float | None = None, lon: float | None = None, radius: float | None = None, db: Session = Depends(get_db)) -> List[TherapistModel]:
+def search_therapists(specialization: str | None = None, lat: float | None = None, lon: float | None = None, radius: float | None = None, page: int = 1, limit: int = 10, db: Session = Depends(get_db)) -> List[TherapistModel]:
     query = db.query(TherapistModel)
 
     if specialization:
@@ -38,8 +57,12 @@ def search_therapists(specialization: str | None = None, lat: float | None = Non
             if therapist.latitude is not None and therapist.longitude is not None:
                 distance = haversine(lat, lon, therapist.latitude, therapist.longitude)
                 if distance <= radius:
+                    therapist.average_rating = 4.5 # Mock rating
                     filtered_therapists.append(therapist)
         therapists = filtered_therapists
+
+    offset = (page - 1) * limit
+    therapists = therapists[offset:offset + limit]
 
     return therapists
 
@@ -131,9 +154,18 @@ def delete_therapist_profile(db: Session = Depends(get_db), current_user: User =
     db.commit()
     return TherapistDelete()
 
-@router.get("/", response_model=ProfileResponse)
-def get_user_profile(current_user: User = Depends(jwt.get_current_user)) -> ProfileResponse:
-    if current_user.user_type == UserType.PATIENT:
-        return ProfileResponse(user_type=UserType.PATIENT, profile=current_user.patient_profile)
-    else:
-        return ProfileResponse(user_type=UserType.THERAPIST, profile=current_user.therapist_profile)
+@router.get("/therapist/{therapist_id}", response_model=Therapist)
+def get_therapist_profile_by_id(therapist_id: int, db: Session = Depends(get_db)) -> TherapistModel:
+    db_profile = db.query(TherapistModel).filter(TherapistModel.id == therapist_id).first()
+    if not db_profile:
+        raise HTTPException(status_code=404, detail="Therapist profile not found.")
+
+    return db_profile
+
+@router.get("/therapist/{therapist_id}", response_model=Therapist)
+def get_therapist_profile(therapist_id: int, db: Session = Depends(get_db)) -> TherapistModel:
+    db_profile = db.query(TherapistModel).filter(TherapistModel.id == therapist_id).first()
+    if not db_profile:
+        raise HTTPException(status_code=404, detail="Therapist profile not found.")
+
+    return db_profile

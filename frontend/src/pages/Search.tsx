@@ -1,5 +1,5 @@
 
-import { useState, type ChangeEvent } from 'react';
+import { useState, useEffect, type ChangeEvent, useRef, useCallback } from 'react';
 import type { FC } from 'react';
 import {
   Container,
@@ -10,39 +10,122 @@ import {
   Grid,
   Card,
   CardContent,
+  Alert,
+  Rating,
+  Modal,
 } from '@mui/material';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import type { Therapist } from '../types/therapist';
+import LocationPicker from '../components/LocationPicker';
 
 const Search: FC = () => {
   const [specialization, setSpecialization] = useState<string>('');
-  const [lat, setLat] = useState<number | ''>(34.0522);
-  const [lon, setLon] = useState<number | ''>(-118.2437);
-  const [radius, setRadius] = useState<number | ''>(10);
   const [results, setResults] = useState<Therapist[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
+  const observer = useRef<IntersectionObserver | null>(null);
 
-  const handleSearch = async () => {
+  const itemsPerPage = 10;
+
+  const lastResultRef = useCallback(
+    (node: HTMLDivElement) => {
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          handleSearch(false);
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [hasMore]
+  );
+
+  useEffect(() => {
+    const getLocation = async () => {
+      try {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setUserLocation({ lat: position.coords.latitude, lon: position.coords.longitude });
+          },
+          async (error) => {
+            console.error('Error getting browser location:', error);
+            // Fallback to IP location
+            try {
+              const response = await fetch('https://ipapi.co/json/');
+              const data = await response.json();
+              setUserLocation({ lat: data.latitude, lon: data.longitude });
+            } catch (ipError) {
+              console.error('Error getting IP location:', ipError);
+              setError('Could not determine your location.');
+            }
+          }
+        );
+      } catch (error) {
+        console.error('Error getting location:', error);
+        setError('Could not determine your location.');
+      }
+    };
+    getLocation();
+  }, []);
+
+  useEffect(() => {
+    if (userLocation) {
+      handleSearch(true);
+    }
+  }, [userLocation]);
+
+  const handleSearch = async (isNewSearch = false) => {
+    setError(null);
+    if (isNewSearch) {
+      setPage(1);
+      setResults([]);
+    }
+
+    const lat = userLocation?.lat;
+    const lon = userLocation?.lon;
+
+    if (lat === undefined || lon === undefined) {
+      setError('Location not set.');
+      return;
+    }
+
     try {
       const response = await api.get<Therapist[]>('/profile/therapists/search', {
         params: {
           specialization,
-          lat: lat === '' ? undefined : lat,
-          lon: lon === '' ? undefined : lon,
-          radius: radius === '' ? undefined : radius,
+          lat,
+          lon,
+          radius: 50, // Hardcoded for now
+          page: isNewSearch ? 1 : page,
+          limit: itemsPerPage,
         },
       });
-      setResults(response.data);
+      setResults((prevResults) => (isNewSearch ? response.data : [...prevResults, ...response.data]));
+      setPage((prevPage) => (isNewSearch ? 2 : prevPage + 1));
+      setHasMore(response.data.length === itemsPerPage);
     } catch (error) {
       console.error('Search failed:', error);
+      setError('Search failed.');
     }
   };
 
   const handleTherapistClick = (therapistId: number) => {
     sessionStorage.setItem('selectedTherapistId', String(therapistId));
-    // navigate(`/therapist/${therapistId}`);
+    navigate(`/therapist/${therapistId}`);
+  };
+
+  const handleChangeLocation = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleLocationSelect = (lat: number, lon: number) => {
+    setUserLocation({ lat, lon });
+    setIsModalOpen(false);
   };
 
   return (
@@ -50,6 +133,7 @@ const Search: FC = () => {
       <Typography variant="h4" component="h1" gutterBottom>
         Therapist Search
       </Typography>
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       <Box sx={{ mb: 4 }}>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 6 }} component="div">
@@ -60,87 +144,42 @@ const Search: FC = () => {
               onChange={(e: ChangeEvent<HTMLInputElement>) => setSpecialization(e.target.value)}
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 2 }} component="div">
-            <TextField
-              fullWidth
-              label="Latitude"
-              type="number"
-              value={lat}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setLat(e.target.value === '' ? '' : parseFloat(e.target.value))
-              }
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 2 }} component="div">
-            <TextField
-              fullWidth
-              label="Longitude"
-              type="number"
-              value={lon}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setLon(e.target.value === '' ? '' : parseFloat(e.target.value))
-              }
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 2 }} component="div">
-            <TextField
-              fullWidth
-              label="Radius (km)"
-              type="number"
-              value={radius}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setRadius(e.target.value === '' ? '' : parseFloat(e.target.value))
-              }
-            />
-          </Grid>
           <Grid size={{ xs: 12 }} component="div">
-            <Button variant="contained" onClick={handleSearch}>
+            <Button variant="contained" onClick={() => handleSearch(true)}>
               Search
+            </Button>
+            <Button variant="outlined" sx={{ ml: 1 }} onClick={handleChangeLocation}>
+              Change Location
             </Button>
           </Grid>
         </Grid>
       </Box>
 
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 6 }} component="div">
-          <MapContainer center={[lat || 34.0522, lon || -118.2437]} zoom={10} style={{ height: '500px', width: '100%' }}>
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            />
-            {results.map((therapist) => (
-              therapist.latitude && therapist.longitude && (
-                <Marker key={therapist.id} position={[therapist.latitude, therapist.longitude]}>
-                  <Popup>
-                    {therapist.full_name} <br /> {therapist.office_address}
-                  </Popup>
-                </Marker>
-              )
-            ))}
-          </MapContainer>
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }} component="div">
-          <Box sx={{ height: '500px', overflowY: 'auto' }}>
-            <Grid container spacing={2}>
-              {results.map((therapist) => (
-                <Grid size={{ xs: 12 }} key={therapist.id} component="div">
-                  <Card onClick={() => handleTherapistClick(therapist.id)} style={{ cursor: 'pointer' }}>
-                    <CardContent>
-                      <Typography variant="h6">{therapist.full_name}</Typography>
-                      <Typography>Specialization: {therapist.specialization}</Typography>
-                      <Typography>Address: {therapist.office_address}</Typography>
-                      <Typography>Phone: {therapist.phone_number}</Typography>
-                      {therapist.website && (
-                        <Typography>Website: <a href={therapist.website} target="_blank" rel="noopener noreferrer">{therapist.website}</a></Typography>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
-        </Grid>
+        {results.map((therapist, index) => (
+          <Grid
+            size={{ xs: 12 }}
+            key={therapist.id}
+            ref={index === results.length - 1 ? lastResultRef : null}
+            component="div"
+          >
+            <Card onClick={() => handleTherapistClick(therapist.id)} style={{ cursor: 'pointer' }}>
+              <CardContent>
+                <Typography variant="h6">{therapist.full_name}</Typography>
+                <Typography>Specialization: {therapist.specialization}</Typography>
+                <Typography>Address: {therapist.office_address}</Typography>
+                <Rating value={therapist.average_rating} readOnly />
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
       </Grid>
+      {!hasMore && <Typography sx={{ textAlign: 'center', mt: 2 }}>No more results</Typography>}
+      <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 600, bgcolor: 'background.paper', border: '2px solid #000', boxShadow: 24, p: 4 }}>
+          <LocationPicker onLocationSelect={handleLocationSelect} />
+        </Box>
+      </Modal>
     </Container>
   );
 };

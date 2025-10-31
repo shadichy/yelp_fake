@@ -4,24 +4,37 @@ import type { FC } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../app/store';
 import api from '../api';
-import { Box, TextField, Button, List, ListItem, ListItemText, Typography, Divider } from '@mui/material';
+import webSocketService from '../api/websocket';
+import { Box, TextField, Button, List, ListItem, ListItemText, Typography, Divider, ListItemButton } from '@mui/material';
 import type { Message } from '../types/message';
 import type { UserProfile } from '../types/profile';
+import { jwtDecode } from 'jwt-decode';
+import type { DecodedToken } from '../types/jwt';
 
 const Messaging: FC = () => {
   const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState<string>('');
   const [connectedUsers, setConnectedUsers] = useState<UserProfile[]>([]);
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user, token } = useSelector((state: RootState) => state.auth);
+  const [userId, setUserId] = useState<string>('');
+
+  useEffect(() => {
+    if (token) {
+      const decodedToken = jwtDecode<DecodedToken>(token);
+      setUserId(decodedToken.sub);
+    }
+  }, [token]);
 
   useEffect(() => {
     const fetchConnectedUsers = async () => {
-      try {
-        const response = await api.get<UserProfile[]>('/messages/connected_users');
-        setConnectedUsers(response.data);
-      } catch (error) {
-        console.error('Error fetching connected users:', error);
+      if (user) {
+        try {
+          const response = await api.get<UserProfile[]>('/messages/connected_users');
+          setConnectedUsers(response.data);
+        } catch (error) {
+          console.error('Error fetching connected users:', error);
+        }
       }
     };
 
@@ -31,7 +44,22 @@ const Messaging: FC = () => {
     if (storedMessagingTargetId) {
       setSelectedConversation(parseInt(storedMessagingTargetId));
     }
-  }, []);
+  }, [user]);
+
+  useEffect(() => {
+    if (userId) {
+      webSocketService.connect(`ws://localhost:8000/ws/${userId}`);
+      webSocketService.addMessageListener((message: Message) => {
+        if (message.sender_id === selectedConversation || message.receiver_id === selectedConversation) {
+          setMessages((prevMessages) => [...prevMessages, message]);
+        }
+      });
+    }
+
+    return () => {
+      webSocketService.disconnect();
+    };
+  }, [userId, selectedConversation]);
 
   useEffect(() => {
     if (selectedConversation) {
@@ -52,15 +80,14 @@ const Messaging: FC = () => {
     sessionStorage.setItem('messagingTargetId', String(userId));
   };
 
-  const handleSendMessage = async () => {
-    if (selectedConversation) {
-      try {
-        const response = await api.post<Message>('/messages/', { receiver_id: selectedConversation, content: newMessage });
-        setMessages([...messages, response.data]);
-        setNewMessage('');
-      } catch (error) {
-        console.error('Error sending message:', error);
-      }
+  const handleSendMessage = () => {
+    if (selectedConversation && newMessage.trim()) {
+      const message = {
+        receiver_id: selectedConversation,
+        content: newMessage,
+      };
+      webSocketService.sendMessage(message);
+      setNewMessage('');
     }
   };
 
@@ -77,14 +104,13 @@ const Messaging: FC = () => {
         <Divider />
         <List>
           {connectedUsers.map((connectedUser) => (
-            <ListItem
-              button
+            <ListItemButton
               key={connectedUser.id}
               onClick={() => handleSelectConversation(connectedUser.id)}
               selected={selectedConversation === connectedUser.id}
             >
               <ListItemText primary={connectedUser.full_name} />
-            </ListItem>
+            </ListItemButton>
           ))}
         </List>
       </Box>

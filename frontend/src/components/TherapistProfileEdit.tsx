@@ -1,236 +1,177 @@
-import { useState, type FC, useEffect } from 'react';
+import { useState, useEffect, type FC, type ChangeEvent, type FormEvent } from 'react';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../app/store';
-import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  Container,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
 import api from '../api';
-import type { TherapistProfile } from '../types/profile';
-import { UserType } from '../schemas/enums';
+import type { Therapist } from '../types/therapist';
+import { TextField, Button, Box, Typography, IconButton, Alert, Avatar, Modal } from '@mui/material';
+import MapIcon from '@mui/icons-material/Map';
+import LocationPicker from './LocationPicker';
 
 const TherapistProfileEdit: FC = () => {
-  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
-  const [profile, setProfile] = useState<TherapistProfile | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [profile, setProfile] = useState<Therapist | null>(null);
+  const [alert, setAlert] = useState<{ severity: 'success' | 'error'; message: string } | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { user } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     const fetchProfile = async () => {
-      if (isAuthenticated && user && user.user_type === UserType.THERAPIST) {
+      if (user) {
         try {
-          const response = await api.get<TherapistProfile>(`/profile/therapist/${user.id}`);
+          const response = await api.get<Therapist>(`/profile/therapist`);
           setProfile(response.data);
-        } catch (err) {
-          setError('Failed to fetch profile.');
-          console.error(err);
-        } finally {
-          setLoading(false);
+          if (!response.data.office_address) {
+            navigator.geolocation.getCurrentPosition(async (position) => {
+              const { latitude, longitude } = position.coords;
+              try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                const data = await response.json();
+                if (data.display_name) {
+                  setProfile((prevProfile) => ({
+                    ...prevProfile!,
+                    office_address: data.display_name,
+                    latitude,
+                    longitude,
+                  }));
+                }
+              } catch (error) {
+                console.error('Error getting address from coordinates:', error);
+              }
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching therapist profile:', error);
         }
-      } else {
-        setLoading(false);
-        setError('Not authenticated or not a therapist.');
       }
     };
     fetchProfile();
-  }, [isAuthenticated, user]);
+  }, [user]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setProfile((prevProfile) => ({
-      ...(prevProfile as TherapistProfile),
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!profile || !user) return;
-
-    setLoading(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      await api.put(`/profile/therapist/${user.id}`, profile);
-      setSuccess('Profile updated successfully!');
-    } catch (err) {
-      setError('Failed to update profile.');
-      console.error(err);
-    } finally {
-      setLoading(false);
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (profile) {
+      setProfile({ ...profile, [e.target.name]: e.target.value });
     }
   };
 
-  if (loading) {
-    return (
-      <Container maxWidth="sm">
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-          <CircularProgress />
-        </Box>
-      </Container>
-    );
-  }
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
 
-  if (error) {
-    return (
-      <Container maxWidth="sm">
-        <Alert severity="error" sx={{ mt: 4 }}>
-          {error}
-        </Alert>
-      </Container>
-    );
-  }
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (profile) {
+      try {
+        if (selectedFile) {
+          const formData = new FormData();
+          formData.append('file', selectedFile);
+          await api.post('/profile/therapist/picture', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          });
+        }
+        await api.put('/profile/therapist', profile);
+        setAlert({ severity: 'success', message: 'Profile updated successfully!' });
+      } catch (error) {
+        console.error('Error updating therapist profile:', error);
+        setAlert({ severity: 'error', message: 'Error updating profile' });
+      }
+    }
+  };
+
+  const handleMapClick = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleLocationSelect = (lat: number, lon: number, address: string) => {
+    if (profile) {
+      setProfile({ ...profile, office_address: address, latitude: lat, longitude: lon });
+    }
+    setIsModalOpen(false);
+  };
 
   if (!profile) {
-    return (
-      <Container maxWidth="sm">
-        <Alert severity="info" sx={{ mt: 4 }}>
-          No therapist profile found. Please create one.
-        </Alert>
-        {/* Optionally add a form to create a new profile here */}
-      </Container>
-    );
+    return <div>Loading...</div>;
   }
 
   return (
-    <Container maxWidth="sm">
-      <Typography variant="h4" component="h1" gutterBottom>
+    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
+      <Typography variant="h5" component="h2" gutterBottom>
         Edit Therapist Profile
       </Typography>
-      <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
-        <TextField
-          margin="normal"
-          required
-          fullWidth
-          id="full_name"
-          label="Full Name"
-          name="full_name"
-          autoComplete="name"
-          value={profile.full_name || ''}
-          onChange={handleChange}
-        />
-        <TextField
-          margin="normal"
-          required
-          fullWidth
-          id="specialization"
-          label="Specialization"
-          name="specialization"
-          autoComplete="specialization"
-          value={profile.specialization || ''}
-          onChange={handleChange}
-        />
-        <TextField
-          margin="normal"
-          required
-          fullWidth
-          id="license_number"
-          label="License Number"
-          name="license_number"
-          autoComplete="license-number"
-          value={profile.license_number || ''}
-          onChange={handleChange}
-        />
-        <TextField
-          margin="normal"
-          required
-          fullWidth
-          id="years_of_experience"
-          label="Years of Experience"
-          name="years_of_experience"
-          type="number"
-          value={profile.years_of_experience || ''}
-          onChange={handleChange}
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          id="bio"
-          label="Bio"
-          name="bio"
-          multiline
-          rows={4}
-          value={profile.bio || ''}
-          onChange={handleChange}
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          id="office_address"
-          label="Office Address"
-          name="office_address"
-          autoComplete="address-line1"
-          value={profile.office_address || ''}
-          onChange={handleChange}
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          id="phone_number"
-          label="Phone Number"
-          name="phone_number"
-          autoComplete="tel"
-          value={profile.phone_number || ''}
-          onChange={handleChange}
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          id="website"
-          label="Website"
-          name="website"
-          autoComplete="url"
-          value={profile.website || ''}
-          onChange={handleChange}
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          id="latitude"
-          label="Latitude"
-          name="latitude"
-          type="number"
-          value={profile.latitude || ''}
-          onChange={handleChange}
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          id="longitude"
-          label="Longitude"
-          name="longitude"
-          type="number"
-          value={profile.longitude || ''}
-          onChange={handleChange}
-        />
-        {success && (
-          <Alert severity="success" sx={{ mt: 2 }}>
-            {success}
-          </Alert>
-        )}
-        {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {error}
-          </Alert>
-        )}
-        <Button
-          type="submit"
-          fullWidth
-          variant="contained"
-          sx={{ mt: 3, mb: 2 }}
-          disabled={loading}
-        >
-          Save Profile
+      {alert && <Alert severity={alert.severity}>{alert.message}</Alert>}
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <Avatar src={profile.profile_picture_url} sx={{ width: 100, height: 100, mr: 2 }} />
+        <Button variant="contained" component="label">
+          Upload Picture
+          <input type="file" hidden onChange={handleFileChange} />
         </Button>
       </Box>
-    </Container>
+      <TextField
+        fullWidth
+        label="Full Name"
+        name="full_name"
+        value={profile.full_name}
+        onChange={handleChange}
+        margin="normal"
+      />
+      <TextField
+        fullWidth
+        label="Specialization"
+        name="specialization"
+        value={profile.specialization}
+        onChange={handleChange}
+        margin="normal"
+      />
+      <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+        <TextField
+          fullWidth
+          label="Office Address"
+          name="office_address"
+          value={profile.office_address}
+          onChange={handleChange}
+          margin="normal"
+        />
+        <IconButton onClick={handleMapClick} color="primary">
+          <MapIcon />
+        </IconButton>
+      </Box>
+      <TextField
+        fullWidth
+        label="Phone Number"
+        name="phone_number"
+        value={profile.phone_number}
+        onChange={handleChange}
+        margin="normal"
+      />
+      <TextField
+        fullWidth
+        label="Website"
+        name="website"
+        value={profile.website}
+        onChange={handleChange}
+        margin="normal"
+      />
+      <TextField
+        fullWidth
+        label="Years of Experience"
+        name="years_of_experience"
+        type="number"
+        value={profile.years_of_experience}
+        onChange={handleChange}
+        margin="normal"
+      />
+      <Button type="submit" variant="contained" sx={{ mt: 2 }}>
+        Save Changes
+      </Button>
+      <Modal open={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 600, bgcolor: 'background.paper', border: '2px solid #000', boxShadow: 24, p: 4 }}>
+          <LocationPicker onLocationSelect={handleLocationSelect} />
+        </Box>
+      </Modal>
+    </Box>
   );
 };
 

@@ -12,7 +12,9 @@ import {
   TextField,
   Rating,
   Box,
+  IconButton,
 } from '@mui/material';
+import MapIcon from '@mui/icons-material/Map';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { jwtDecode } from 'jwt-decode';
@@ -25,7 +27,7 @@ import { UserType } from '../schemas/enums';
 import type { DecodedToken } from '../types/jwt';
 
 const TherapistProfile: FC = () => {
-  // const { id } = useParams<{ id: string }>();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [therapist, setTherapist] = useState<Therapist | null>(null);
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
@@ -34,10 +36,9 @@ const TherapistProfile: FC = () => {
   const [comment, setComment] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [alert, setAlert] = useState<{ severity: 'success' | 'error'; message: string } | null>(null);
   const { token } = useSelector((state: RootState) => state.auth);
   const [user, setUser] = useState<DecodedToken | null>(null);
-
-  const id = sessionStorage.getItem('selectedTherapistId') || '';
 
   useEffect(() => {
     if (token) {
@@ -71,16 +72,16 @@ const TherapistProfile: FC = () => {
         start_time: availability.start_time,
         end_time: availability.end_time,
       });
-      alert('Appointment booked successfully!');
+      setAlert({ severity: 'success', message: 'Appointment booked successfully!' });
     } catch (err) {
       console.log(err);
-      alert('Failed to book appointment.');
+      setAlert({ severity: 'error', message: 'Failed to book appointment.' });
     }
   };
 
   const handleAddReview = async () => {
     if (rating === null) {
-      alert('Please provide a rating.');
+      setAlert({ severity: 'error', message: 'Please provide a rating.' });
       return;
     }
     try {
@@ -88,9 +89,10 @@ const TherapistProfile: FC = () => {
       setReviews([...reviews, response.data]);
       setRating(0);
       setComment('');
+      setAlert({ severity: 'success', message: 'Review submitted successfully!' });
     } catch (err) {
       console.log(err);
-      alert('Failed to submit review.');
+      setAlert({ severity: 'error', message: 'Failed to submit review.' });
     }
   };
 
@@ -98,6 +100,12 @@ const TherapistProfile: FC = () => {
     if (therapist?.id) {
       sessionStorage.setItem('messagingTargetId', String(therapist.id));
       navigate('/messaging');
+    }
+  };
+
+  const openMap = () => {
+    if (therapist) {
+      window.open(`https://www.openstreetmap.org/?mlat=${therapist.latitude}&mlon=${therapist.longitude}#map=15/${therapist.latitude}/${therapist.longitude}`);
     }
   };
 
@@ -115,12 +123,18 @@ const TherapistProfile: FC = () => {
 
   return (
     <Container>
+      {alert && <Alert severity={alert.severity} sx={{ mb: 2 }}>{alert.message}</Alert>}
       <Card>
         <CardContent>
           <Typography variant="h4">{therapist.full_name}</Typography>
           <Typography variant="h6">{therapist.specialization}</Typography>
           <Typography>Years of Experience: {therapist.years_of_experience}</Typography>
-          <Typography>Address: {therapist.office_address}</Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography>Address: {therapist.office_address}</Typography>
+            <IconButton onClick={openMap} color="primary">
+              <MapIcon />
+            </IconButton>
+          </Box>
           <Typography>Phone: {therapist.phone_number}</Typography>
           {therapist.website && (
             <Typography>

@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.sql import func
 from ..database import Base
 import datetime
+import json
 
 class Message(Base):
     __tablename__ = "messages"
@@ -14,3 +15,11 @@ class Message(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     sent_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
+    def to_json(self):
+        return json.dumps({
+            "id": self.id,
+            "sender_id": self.sender_id,
+            "receiver_id": self.receiver_id,
+            "content": self.content,
+            "sent_at": self.sent_at.isoformat(),
+        })

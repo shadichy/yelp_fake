@@ -20,8 +20,13 @@ from backend.routers import message as message_router
 
 from backend.models.relationships import create_relationships
 from backend.firstrun import run_first_time_setup
+import os
 
 app = FastAPI()
+
+@app.on_event("startup")
+async def startup_event():
+    os.makedirs("static/images", exist_ok=True)
 
 app.add_middleware(
     CORSMiddleware,
@@ -48,6 +53,7 @@ app.include_router(appointment_router.router)
 app.include_router(review_router.router)
 app.include_router(message_router.router)
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/assets", StaticFiles(directory="frontend/dist/assets"), name="assets")
 
 
