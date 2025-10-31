@@ -15,7 +15,7 @@ const Availability: FC = () => {
 
   useEffect(() => {
     const fetchAvailabilities = async () => {
-      if (user && user.user_type === UserType.THERAPIST) {
+      if (user && user.id && user.user_type === UserType.THERAPIST) {
         try {
           const response = await api.get<AvailabilityType[]>(`/availability/?therapist_id=${user.id}`);
           setAvailabilities(response.data);
