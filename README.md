@@ -263,17 +263,21 @@ Mô hình dữ liệu logic chi tiết hóa các thực thể khái niệm thàn
 ### 4.1. Cài đặt môi trường
 
 #### 4.1.X. cài đặt môi trường
+0.  **Hệ thống:**
+    *   Clone repo này: `git clone https://github.com/shadichy/yelp_fake yelp`.
+    *   Chuyển vào thư mục `yelp`: `cd yelp`.
+    *   Clone submodule: `git submodule update --init --recursive`.
 1.  **Backend (Python):**
     *   Cài đặt Python 3.9+ (đã sử dụng Python 3.13 trong quá trình phát triển).
-    *   Tạo môi trường ảo: `python3 -m venv yelp/backend/venv`.
-    *   Kích hoạt môi trường ảo: `source yelp/backend/venv/bin/activate`.
-    *   Cài đặt các thư viện từ `requirements.txt`: `pip install -r yelp/backend/requirements.txt`.
-    *   Tạo tệp `.env` trong `yelp/backend/` với các biến môi trường cần thiết (DATABASE_URL, SECRET_KEY, MAIL_USERNAME, etc.).
+    *   Tạo môi trường ảo: `python3 -m venv backend/venv`.
+    *   Kích hoạt môi trường ảo: `source backend/venv/bin/activate`.
+    *   Cài đặt các thư viện từ `requirements.txt`: `pip install -r backend/requirements.txt`.
+    *   Tạo tệp `.env` trong `backend/` với các biến môi trường cần thiết (DATABASE_URL, SECRET_KEY, MAIL_USERNAME, etc.).
     *   Chạy seed data (tùy chọn): `cd yelp && backend/venv/bin/python tests/seed.py`
     *   Khởi chạy Backend: `cd yelp && backend/venv/bin/uvicorn backend.main:app --reload --port 8000 --env-file backend/.env`.
 2.  **Frontend (Next.js):**
     *   Cài đặt Node.js và npm.
-    *   Truy cập thư mục `yelp/frontend`.
+    *   Truy cập thư mục `frontend`.
     *   Cài đặt các gói phụ thuộc: `npm install`.
     *   Khởi chạy Frontend: `npm run dev`.
 3.  **Cơ sở dữ liệu:**

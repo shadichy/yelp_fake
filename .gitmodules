@@ -1,0 +1,8 @@
+[submodule "backend"]
+	path = backend
+	url = https://github.com/shadichy/yelp_fake
+	branch = ng_be
+[submodule "frontend"]
+	path = frontend
+	url = https://github.com/shadichy/yelp_fake
+	branch = ng_fe
